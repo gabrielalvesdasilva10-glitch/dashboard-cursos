@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Cursos</title>
+<style>
+  :root{
+    --navy-900:#0d2340;
+    --navy-800:#123159;
+    --navy-700:#1a4276;
+    --ink:#132338;
+    --muted:#66748c;
+    --line:#e4e9f1;
+    --bg:#eef1f6;
+    --card:#ffffff;
+    --green:#1e9e5a;
+    --green-bg:#e7f7ee;
+    --amber:#e0a300;
+    --amber-bg:#fdf3dc;
+    --red:#d94848;
+    --red-bg:#fbe9e9;
+    --blue:#2f6fed;
+    --blue-bg:#eaf1fe;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;width:100%;min-height:100%;}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  body{overflow-x:hidden;}
+  body{
+    font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1440px;margin:0 auto;padding:0 0 40px;}
+
+  /* HEADER */
+  header{
+    background:linear-gradient(100deg,var(--navy-900) 0%,var(--navy-800) 55%,var(--navy-700) 100%);
+    color:#fff;
+    padding:22px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:16px;}
+  .brand .mark{
+    width:46px;height:46px;border-radius:12px;
+    background:rgba(255,255,255,.12);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;
+    flex-shrink:0;
+  }
+  .brand h1{font-size:21px;margin:0;letter-spacing:.3px;font-weight:700;}
+  .brand p{margin:2px 0 0;font-size:12.5px;color:#b9c9e6;font-weight:500;}
+  .head-right{display:flex;align-items:center;gap:18px;color:#d7e2f5;font-size:12.5px;}
+  .head-stat{text-align:right;}
+  .head-stat b{display:block;color:#fff;font-size:14px;}
+  .upload-btn{
+    background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);
+    border-radius:9px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;
+    white-space:nowrap;transition:background .15s;
+  }
+  .upload-btn:hover{background:rgba(255,255,255,.24);}
+  .upload-status{
+    font-size:11.5px;color:#ffd9d9;font-weight:600;margin-top:4px;
+  }
+
+  /* KPI ROW */
+  .kpis{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+    padding:20px 28px 0;
+  }
+  .kpi{
+    background:var(--card);border-radius:var(--radius);
+    padding:16px 18px;display:flex;align-items:center;gap:14px;
+    box-shadow:0 1px 3px rgba(19,35,56,.06);
+    border:1px solid var(--line);
+  }
+  .kpi .icon{
+    width:44px;height:44px;border-radius:11px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:19px;
+  }
+  .kpi.total .icon{background:var(--blue-bg);color:var(--blue);}
+  .kpi.done .icon{background:var(--green-bg);color:var(--green);}
+  .kpi.pending .icon{background:var(--red-bg);color:var(--red);}
+  .kpi.rate .icon{background:var(--amber-bg);color:var(--amber);}
+  .kpi .label{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin-bottom:3px;}
+  .kpi .value-row{display:flex;align-items:baseline;gap:8px;}
+  .kpi .value{font-size:24px;font-weight:800;color:var(--ink);}
+  .kpi .pct{font-size:13px;font-weight:700;}
+  .kpi.done .pct{color:var(--green);}
+  .kpi.pending .pct{color:var(--red);}
+  .kpi-bar{height:5px;border-radius:3px;background:var(--line);margin-top:8px;overflow:hidden;}
+  .kpi-bar span{display:block;height:100%;border-radius:3px;}
+  .kpi.done .kpi-bar span{background:var(--green);}
+  .kpi.pending .kpi-bar span{background:var(--red);}
+  .kpi-body{flex:1;min-width:0;}
+
+  /* FILTERS */
+  .filters{
+    background:var(--card);margin:20px 28px 0;border-radius:var(--radius);
+    padding:16px 18px;display:grid;grid-template-columns:repeat(6,1fr);gap:14px;
+    border:1px solid var(--line);box-shadow:0 1px 3px rgba(19,35,56,.05);
+  }
+  .filter-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}
+  .filter-field select{
+    width:100%;padding:9px 10px;border-radius:9px;border:1px solid var(--line);
+    background:#fbfcfe url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%2366748c"/></svg>') no-repeat right 11px center;
+    appearance:none;-webkit-appearance:none;
+    font-size:13px;color:var(--ink);font-weight:600;cursor:pointer;
+  }
+  .filter-field select:focus{outline:2px solid var(--blue);outline-offset:1px;}
+
+  /* GRID PANELS */
+  .grid3{
+    display:grid;grid-template-columns:1.05fr 1fr 1.05fr;gap:16px;
+    padding:20px 28px 0;align-items:start;
+  }
+  .panel{
+    background:var(--card);border-radius:var(--radius);border:1px solid var(--line);
+    box-shadow:0 1px 3px rgba(19,35,56,.05);
+    padding:16px 18px 18px;
+  }
+  .panel + .panel{margin-top:16px;}
+  .panel h3{
+    margin:0 0 14px;font-size:14.5px;font-weight:700;color:var(--ink);
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;}
+  .panel .sub{font-size:11px;color:var(--muted);font-weight:600;margin-left:auto;}
+
+  /* bar list */
+  .barlist{display:flex;flex-direction:column;gap:9px;}
+  .barlist .row{display:grid;grid-template-columns:150px 1fr 34px;gap:8px;align-items:center;}
+  .barlist .name{font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .barlist .track{height:14px;background:#eef1f6;border-radius:5px;overflow:hidden;}
+  .barlist .fill{height:100%;border-radius:5px;background:var(--blue);}
+  .barlist .num{font-size:12px;font-weight:700;text-align:right;color:var(--ink);}
+  .empty-note{font-size:12.5px;color:var(--muted);padding:8px 0;}
+
+  /* donut legend */
+  .donut-wrap{display:flex;align-items:center;gap:18px;}
+  .donut-canvas-box{position:relative;width:150px;height:150px;flex-shrink:0;}
+  .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+  .donut-center b{font-size:22px;color:var(--ink);}
+  .donut-center span{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;}
+  .legend{flex:1;display:flex;flex-direction:column;gap:10px;}
+  .legend .item{display:flex;align-items:center;gap:9px;font-size:12.5px;}
+  .legend .sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+  .legend .txt{flex:1;font-weight:600;color:var(--ink);}
+  .legend .cnt{font-weight:800;color:var(--ink);}
+  .legend .pctv{font-weight:700;color:var(--muted);width:52px;text-align:right;font-size:12px;}
+
+  /* mini table (top criticos) */
+  table.mini{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.mini th{
+    text-align:left;font-size:10.5px;text-transform:uppercase;color:var(--muted);
+    font-weight:700;padding:0 6px 8px;letter-spacing:.3px;
+  }
+  table.mini td{padding:8px 6px;border-top:1px solid var(--line);color:var(--ink);}
+  .rank{
+    display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--red-bg);color:var(--red);
+    align-items:center;justify-content:center;font-weight:800;font-size:11px;
+  }
+  .rank.r2{background:var(--amber-bg);color:var(--amber);}
+  .rank.r3,.rank.r4,.rank.r5{background:#eef1f6;color:var(--muted);}
+  .pctbad{color:var(--red);font-weight:700;}
+
+  /* stacked curso bars */
+  .curso-block + .curso-block{margin-top:16px;}
+  .curso-block .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .curso-block .cname{font-size:13px;font-weight:700;color:var(--ink);}
+  .curso-block .ctotal{font-size:15px;font-weight:800;color:var(--ink);}
+  .stack{display:flex;height:16px;border-radius:6px;overflow:hidden;background:#eef1f6;}
+  .stack div{height:100%;}
+  .curso-block .breakdown{font-size:11px;color:var(--muted);margin-top:6px;font-weight:600;}
+  .legend-inline{display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);flex-wrap:wrap;}
+  .legend-inline .item{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--muted);}
+  .legend-inline .sw{width:9px;height:9px;border-radius:3px;}
+
+  /* detail table */
+  .detail{
+    background:var(--card);margin:20px 28px 0;border-radius:var(--radius);border:1px solid var(--line);
+    box-shadow:0 1px 3px rgba(19,35,56,.05);padding:16px 18px 8px;
+  }
+  .detail-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .detail-head h3{margin:0;font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .search-box{
+    flex:1;min-width:220px;position:relative;max-width:360px;
+  }
+  .search-box input{
+    width:100%;padding:9px 12px 9px 32px;border-radius:9px;border:1px solid var(--line);
+    font-size:13px;background:#fbfcfe;
+  }
+  .search-box input:focus{outline:2px solid var(--blue);outline-offset:1px;}
+  .search-box::before{
+    content:"⌕";position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;
+  }
+  .btn-export{
+    margin-left:auto;background:var(--navy-800);color:#fff;border:none;border-radius:9px;
+    padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;
+  }
+  .btn-export:hover{background:var(--navy-700);}
+  .table-scroll{overflow-x:auto;}
+  table.detail-table{width:100%;border-collapse:collapse;min-width:900px;}
+  table.detail-table thead th{
+    text-align:left;font-size:10.5px;text-transform:uppercase;color:var(--muted);font-weight:700;
+    padding:0 10px 10px;letter-spacing:.4px;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  table.detail-table tbody td{padding:10px 10px;font-size:12.5px;border-bottom:1px solid var(--line);color:var(--ink);white-space:nowrap;}
+  table.detail-table tbody tr:hover{background:#f7f9fc;}
+  .badge{
+    padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;display:inline-block;
+  }
+  .badge.ok{background:var(--green-bg);color:var(--green);}
+  .badge.mid{background:var(--amber-bg);color:var(--amber);}
+  .badge.bad{background:var(--red-bg);color:var(--red);}
+  .pager{display:flex;align-items:center;justify-content:space-between;padding:12px 4px 14px;font-size:12px;color:var(--muted);font-weight:600;}
+  .pager .btns{display:flex;gap:6px;}
+  .pager button{
+    border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:700;
+    cursor:pointer;color:var(--ink);
+  }
+  .pager button:disabled{opacity:.4;cursor:not-allowed;}
+  .pager button:not(:disabled):hover{background:#eef1f6;}
+
+  footer{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+    padding:16px 28px 0;color:var(--muted);font-size:11.5px;font-weight:600;
+  }
+  footer .legend-inline{border:none;padding:0;margin:0;}
+
+  @media (max-width:1100px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .filters{grid-template-columns:repeat(3,1fr);}
+    .grid3{grid-template-columns:1fr;}
+  }
+  @media (max-width:640px){
+    html,body{width:100%;overflow-x:hidden;}
+    .wrap{width:100%;padding-bottom:24px;}
+    header{padding:18px 16px;align-items:flex-start;}
+    .header-right{display:none;}
+    .filters{grid-template-columns:1fr !important;}
+    .kpi-grid{grid-template-columns:1fr 1fr !important;}
+    .chart-grid{grid-template-columns:1fr !important;}
+    .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    table{min-width:980px;}
+    select,input,button{font-size:16px;}
+
+    .filters{grid-template-columns:repeat(2,1fr);}
+    .kpis{grid-template-columns:1fr 1fr;}
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="mark">🎓</div>
+      <div>
+        <h1>CONTROLE DE CURSOS</h1>
+        <p>Desenvolvimento &nbsp;•&nbsp; Conformidade &nbsp;•&nbsp; Resultados</p>
+      </div>
+    </div>
+    <div class="head-right">
+      <div class="head-stat"><span>Base analítica</span><b id="hStat1">—</b></div>
+      <div class="head-stat"><span>Registros carregados</span><b id="hStat2">—</b></div>
+      <div class="head-stat"><span>Última atualização</span><b id="hStat3">Base original</b></div>
+      <label class="upload-btn" for="fileInput">⟳ Atualizar Base</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
+    </div>
+  </header>
+
+  <div id="uploadBanner" style="display:none;margin:14px 28px 0;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;"></div>
+
+  <section class="kpis">
+    <div class="kpi total">
+      <div class="icon">👥</div>
+      <div class="kpi-body">
+        <div class="label">Total de Registros</div>
+        <div class="value-row"><span class="value" id="kpiTotal">0</span></div>
+      </div>
+    </div>
+    <div class="kpi done">
+      <div class="icon">✔</div>
+      <div class="kpi-body">
+        <div class="label">Concluídos</div>
+        <div class="value-row"><span class="value" id="kpiDone">0</span><span class="pct" id="kpiDonePct">0%</span></div>
+        <div class="kpi-bar"><span id="kpiDoneBar" style="width:0%"></span></div>
+      </div>
+    </div>
+    <div class="kpi pending">
+      <div class="icon">⚠</div>
+      <div class="kpi-body">
+        <div class="label">Pendentes</div>
+        <div class="value-row"><span class="value" id="kpiPending">0</span><span class="pct" id="kpiPendingPct">0%</span></div>
+        <div class="kpi-bar"><span id="kpiPendingBar" style="width:0%"></span></div>
+      </div>
+    </div>
+    <div class="kpi rate">
+      <div class="icon">◐</div>
+      <div class="kpi-body">
+        <div class="label">% Conclusão</div>
+        <div class="value-row"><span class="value" id="kpiRate">0%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="filters" id="filters"></section>
+
+  <section class="grid3">
+    <div class="col-a">
+      <div class="panel">
+        <h3><span class="dot"></span>Pendências por Gerente <span class="sub">Top 10</span></h3>
+        <div class="barlist" id="gerenteBar"></div>
+      </div>
+    </div>
+
+    <div class="col-b">
+      <div class="panel">
+        <h3><span class="dot" style="background:var(--green)"></span>Status dos Cursos</h3>
+        <div class="donut-wrap">
+          <div class="donut-canvas-box">
+            <svg id="statusDonut" viewBox="0 0 120 120" width="150" height="150"></svg>
+            <div class="donut-center"><b id="donutTotal">0</b><span>Total</span></div>
+          </div>
+          <div class="legend" id="statusLegend"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3><span class="dot" style="background:var(--red)"></span>Top 5 Gerentes Críticos</h3>
+        <table class="mini">
+          <thead><tr><th>#</th><th>Gerente</th><th>Pendências</th><th>% Pendência</th></tr></thead>
+          <tbody id="top5Body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="col-c">
+      <div class="panel">
+        <h3><span class="dot" style="background:var(--blue)"></span>Cursos por Status</h3>
+        <div id="cursoBlocks"></div>
+        <div class="legend-inline">
+          <div class="item"><span class="sw" style="background:var(--green)"></span>Concluído</div>
+          <div class="item"><span class="sw" style="background:var(--amber)"></span>Parcialmente concluído</div>
+          <div class="item"><span class="sw" style="background:var(--red)"></span>Não realizado</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3><span class="dot" style="background:#7c5cff"></span>Pendências por Diretoria</h3>
+        <div class="barlist" id="diretoriaBar"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="detail">
+    <div class="detail-head">
+      <h3><span class="dot" style="background:var(--navy-800)"></span>Detalhamento de Registros</h3>
+      <div class="search-box"><input id="searchInput" type="text" placeholder="Buscar colaborador, gerente, supervisor ou curso..."></div>
+      <button class="btn-export" id="exportBtn">⬇ Exportar XLSX</button>
+    </div>
+    <div class="table-scroll">
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>Colaborador</th><th>Diretoria</th><th>Gerente</th><th>Supervisor</th>
+            <th>Curso</th><th>Status</th><th>Cargo</th><th>Cidade</th><th>Operação</th>
+          </tr>
+        </thead>
+        <tbody id="detailBody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span id="pagerInfo">—</span>
+      <div class="btns">
+        <button id="prevBtn">‹ Anterior</button>
+        <button id="nextBtn">Próxima ›</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>Foco nas pessoas. Resultados para o negócio.</div>
+    <div class="legend-inline">
+      <div class="item"><span class="sw" style="background:var(--green)"></span>Concluído</div>
+      <div class="item"><span class="sw" style="background:var(--amber)"></span>Parcialmente concluído</div>
+      <div class="item"><span class="sw" style="background:var(--red)"></span>Não realizado</div>
+    </div>
+  </footer>
+
+</div>
+
+<noscript>
+  <div style="margin:16px;padding:18px;border-radius:12px;background:#fff3cd;color:#664d03;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;line-height:1.5">
+    <strong>Modo de compatibilidade:</strong> este arquivo precisa ser aberto no Safari/Chrome para executar os filtros e gráficos.
+    Se o iPhone estiver mostrando apenas uma prévia do arquivo no app Arquivos, toque em <strong>Compartilhar → Abrir no Safari</strong>.
+  </div>
+</noscript>
+
+<script>
+window.addEventListener('error', function(e){
+  var box=document.getElementById('uploadMsg');
+  if(box && e && e.message){ box.textContent='Dashboard carregado. Se os dados não aparecerem, abra este arquivo no Safari.'; box.style.display='block'; }
+});
+
+let RAW = {"fields":["aluno","curso","status","diretoria","coordenador","supervisor","gerente","cargo","operacao","cidade","diretor"],"dicts":{"curso":["Home Office - Colaborador","Onboarding Presencial - Boas-vindas"],"status":["NÃO REALIZADO","CONCLUÍDO","PARCIALMENTE CONCLUÍDO"],"diretoria":["PESSOAS","QUALIDADE","DIGITAL","TI","PREMIUM","PLAN","JURIDICO","INFRA PROJ","OPERACOES","SEGURANCA"],"coordenador":["Sem Coordenador","JEFTER OLIVEIRA BARBOSA","ICARO CRUZ DA HORA LIMA","FELIPE CEZAR LIMA GALDINO","ANA LUIZA SOARES DE MELO","BRENDA LINA DOS SANTOS PONTES","INGRA RAYANNE SANTOS RODRIGUES","MARIA VITORIA DOS SANTOS SILVA","ANDERSON VICTOR BORGES","CHRISTIAN FERNANDO RODRIGUES PIMENTA","PAMELLA SUELY DE OLIVEIRA LEONARDO","JHONATAN NASCIMENTO PEREIRA","JOAO PEDRO TRINDADE SILVA","JORGE VICTOR PESSOA RAMOS","ERRYSSON TOBIAS ALMEIDA GALVAO","JOSE NILDO BEZERRA DA SILVA JUNIOR","THAYNNA YASMIM MOURA DOS SANTOS","GABRIELA RODRIGUES ARAUJO","CLISLANE ALVES DE BRITO","RAPHAELA CORREIA FERRAZ","ANA CLARA LIMA DA COSTA","PAULO IRAN ALVES DOS SANTOS","FABRICIO ANDERSSON ADELINO DE MACEDO","VENANCIO GONCALVES DOS SANTOS","LUCAS ADRIANO GOMES DE ARAUJO","STEFANY FONSECA BARBOSA","RAYANNE DO CARMO GOMES","TATIANE SOUSA MEDEIROS DA SILVA","JESSICA MENDES GONCALVES","KLEBERSON VICTOR NUNES OLIVEIRA","MARIA CLARA CAMPOS RICARTE","JOAO MAYCON MAGALHAES SILVA","BEATRIZ SILVA DUARTE SOARES","CARLOS EDUARDO SOUZA MATOS","JOAO VITTOR MARCOLINO","RENATA LAIS SILVEIRA PRESTES","ROBSON VINICIUS PEREIRA DE OLIVEIRA","LILLIAN BETH CARVALHO CORREA","DIANA STEPHANIE RODRIGUES FIRMINO DO NASCIMENTO","JESSICA MARIA SILVA","THYELLISON ASLAN FERREIRA DA SILVA SANTOS","LETICIA ALVES DA SILVA","JULYANA RENATA FIDELIS GUERRA","LAURA PAIVA DANTAS","BRUNO PINHEIRO GUEIROS DA SILVA","ANDREZA RAYANNA DA SILVA MELO RIBEIRO","JOICE SIQUEIRA DA SILVA","ANDRIELLE KATTE MENDES DE OLIVEIRA","SAMARA BARBOSA SAMPAIO","SERGIO RICARDO GOMES DE FREITAS JUNIOR","SHIRLLEY FIDELIS PEREIRA DE MELO","BRENDA LIMA AMARAL","ANA CAROLINE NUNES SANTOS","THIAGO COELHO DA SILVA","BIANCA DA SILVA RAMALHO","WINNIE ELLEN CANDIDO FIRMINO","THAYNA CRISTINA SILVA SOUZA","EVERTHON MATHEUS PEREIRA DA SILVA","SYLVIA RAQUEL MOREIRA DA SILVA","AUGUSTO HENRIQUE OLIVEIRA DA PAZ","BRYAN SOUZA DA SILVA","CLAUDIVAM BARBOSA PEREIRA","ADLYS CAVALCANTE DA SILVA NAIMAIER","RITHA DE CASSIA AUREA DE LIMA GOMES","ALLYSON KLEBER LACERDA LEITE","JOAO VITOR BAYMA ESCALEIRA","DANIEL SARMENTO DE COUTO","LIVIA MARGARIDA BRANDAO DE OLIVEIRA","MAYARA CRISTINA GOMES PEREIRA","RICARDO DOS SANTOS DE SOUZA","CARLOS RODRIGUES DA SILVA JUNIOR","GEANDERSON FERREIRA BRAGA","CHARLES QUIRINO DA SILVA","RAFAEL ALMEIDA DA COSTA","MIRIAM RENATA DE SOUZA ANDRADE","WILLIAM ALVES DE SOUZA","MABIA TAIANE DE ALMEIDA","GABRIELLA MARQUES FERREIRA","LETICIA SERAFIM DE OLIVEIRA","RICHARD LEANDRO NASCIMENTO","MONICA CRISTINA DANTAS DE SOUSA","PEDRO AUGUSTO BEZERRA DA SILVA SOUSA","JOSE VELOZO DE ANDRADE NETO","TIAGO ASSIS NASCIMENTO","ISRAEL ALMEIDA GOMES DE MELO","FERNANDO PEREIRA EVANGELISTA","WALTER LOPES DE SIQUEIRA NETO","FELIPE DA SILVA COSTA","JANAINA MATIAS RIBEIRO"],"supervisor":["Sem Supervisor","TATIANA DE LIMA BEZERRA","JOSE PIMENTEL DO AMARAL FERREIRA NETO","KAYLLANE PAULINO MACIEL","YTALO GABRIEL ALVARENGA PINTO","LINIA CASSIANE LINS DA SILVA","MARIA EDUARDA DE SOUZA SILVA","JOAO LUCAS DE LIMA PEREIRA","LIELSON LUIZ DE OLIVEIRA","GABRIEL VIANNA DOS SANTOS PEREIRA","NADJANIA CARDOSO JERONIMO","ARTHUR HENRIQUE DOS SANTOS FREITAS","NATAN DOUGLAS SANTOS GONCALVES","MATHEUS MIGUEL REIS DE LIMA","JOAS NUNES DE LIMA","THAMIRES RODRIGUES FERRO","REBEKA CRISTINNE FERREIRA DE LIMA","SILVIA GLAUCIA GONCALVES DE OLIVEIRA","RENATO HOSANAN SOUZA DOS SANTOS","JOAO PAULO PEREIRA NETO","NICOLLY RAQUEL CANDIDO DO NASCIMENTO","CAIO VICTOR DOMINGOS DOS SANTOS","CARLOS EMANOEL PAULINO DO NASCIMENTO","MARIANA REIS LIMA","JONAS DO NASCIMENTO SANTOS FILHO","THAMYRIS CORREIA RIBEIRO LIMA","ALAYDE GUIMARAES FERREIRA NETA","JOSE LUCAS DO NASCIMENTO RODRIGUES","EMERSON BARBOSA DIAS","YASMIN MARINHO PAES VIEIRA SILVA","FELIPE HUGO DE SOUZA FERREIRA","JOAO VICTOR DE OLIVEIRA COSTA","EDUARDO FERREIRA DO NASCIMENTO","NIEDJA FELIX DA SILVA","LETICIA CAROLAYNE DA SILVA CRUZ","GUILHERME FERNANDO MEDEIROS DA SILVA","CAMILLY CUSTODIO FERNANDES DA SILVA","MARISTELA MARQUES CARNEIRO","ANNA CLARA OLIVEIRA TOMAZ FERREIRA","MARIA EDUARDA BATISTA SILVA","FARLEY JUNEO CALDEIRA SILVA","RODOLPHO YURE SANTOS DE OLIVEIRA","JACKELINE OLIVEIRA DA SILVA","ESLANE VITORIA SANTOS FERREIRA","KASSIANO DE SOUZA FRANCA","RAFAEL MASETTI","ADRIAN GABRIEL BERNARDINO LIMA","GUSTAVO ANTONIO SILVA RICARTE","CAUE DA ROCHA SUASSUNA VAZ","JOYCE BERNARDO BARROS","MAYARA SANTOS JUVINO","JAQUELINE MARQUES DE BRITO","ADRIANA OLIVEIRA DE ANDRADE","GEYANDRA KARLA VIANA BARBOSA","LUANA BARRETO DE MACEDO","GABRIELLY DO NASCIMENTO FREIRE","VINICIUS HENRIQUE DUARTE ALVES","ALEXIA GABRIELLY PEREIRA DE FREITAS","IZABEL CARYNNE TORRES DA SILVA","CAIO VINICIUS DA SILVA LOPES","RAYANE OLIVEIRA GOMES","VICTOR GABRIEL FERREIRA VELOSO","MARIA EDUARDA AMANCIO TAVARES","VIVIAN EVILLYN SILVA VIEIRA","LETYCIA BEATRIZ NUNES DE PONTES","ANA BEATRIZ COSTA BARBOSA","LETICIA CHAGAS COUTINHO","VINICIUS DE LIMA VIEIRA","IZABEL VITORIA MARQUES DA COSTA","GABRIEL MARCOLINO MEDEIROS DOS SANTOS","BARBARA STHEFANY DIAS DOS SANTOS","ALLEF SOARES DE OLIVEIRA CHACOM","JULIUS CESAR RODRIGUES LOPES","MARIA VITORIA GOMES DA SILVA","MARIA HELENA PEREIRA","THIAGO ALVES DE FRANCA","CLARICE LUIZA DE AGUIAR MONTEIRO","DANIEL BERG MARCOS DA SILVA","RENATA KARINE VIEIRA MARTINS","RANDERSON DOUGLAS PEREIRA DA SILVA","RAFAELLA ALVES DE SOUZA","MARIA EDUARDA DOS SANTOS CARDOSO","ALLAN GUILHERME BENTO DE LIMA","MARIA EDUARDA AMANCIO MANCINI","PABLO RIAN LIMA RIBEIRO","KARYNNY MYRELLY OLIVEIRA DA SILVA","ELDER SILVEIRA FERREIRA","THALITA MARIA FELIX DA COSTA","RAFAEL FERREIRA FERNANDES","JOSE PEDRO LIMA E SILVA","LAIS FERNANDA DE FREITAS PEREIRA","JOAO WICTOR LIRA MELO","KAUE EMANUEL ARAUJO PESSOA","ANDRE FELIPE PEREIRA CARVALHO GOMES","GLAUCEMAR HENRIQUE VIEIRA PESSOA","DEBORA JOYCE ALVES DE ALMEIDA","DARTILENE DO NASCIMENTO FERREIRA","EUNICE KELLY BARBOSA MAXIMO","VITORIA KAROLINA BEZERRA DA SILVA","ZELIA FERNANDA JERONIMO SILVA","KEILA NAYARA SOUZA AMORIM","JOAO NICOLAS SILVA","ELI BATISTA DO NASCIMENTO FILHO","JOSEFA SOARES DA SILVA","MATEUS SANTOS BORGES","GILLIANE MONTEIRO FABEL","ANA LARA MAMEDE RODRIGUES","VICTOR LEITE SILVA SOUZA","PALOMA DA SILVA SA","VITORIA CAROLINE FERREIRA RESENDE","MATHEUS GABRIELL DE OLIVEIRA SANTOS","THAIS MENDES","ANTONIE DE OLIVEIRA PEREIRA","LUCIANO JUNIO DA SILVA AQUINO","ALINY STEPHYNNY SANTOS PASSOS","OTTO NOBREGA HOFMANN","NICOLE BEZERRA SOARES","SIDNEY DARIL DE SOUZA MATOS","MARCELLY EMANUELLE DA SILVA FERREIRA","LYRIEL KATLEY ALVES COSTA","VINNYCIUS RAPHAEL LACERDA BORBA","MARIA HELOISA DE MELO DA SILVA","CICERO MATEUS DE MOURA","CARINA COSTA CAMPOS","LUCAS ALVES ARRUDA","ANDRE MAIA CARDOSO","MARIA VITORIA DO NASCIMENTO SILVA","RAPHAEL HENRIQUE ALMEIDA VIEIRA","JONATHA OLIVEIRA CAXIAS DE ARAUJO","SHAYENNE MARIA DAS NEVES FERNANDES","VITORIA LIMA DOS SANTOS","ELOYSE LEITE DA SILVA","EVELLYN ARAUJO DA SILVA","ANNYBERG SILVA RAMOS DE OLIVEIRA","VITORIA IORRANE FRADE DE OLIVEIRA","JESSICA MAYRA ARAUJO PEREIRA","FLAVIO ELTON CALDAS ALVES","KATHELEN SUELLEN DA SILVA AGUIAR","VINICIUS SILVA COSTA DE ALMEIDA","ESTENNYO SALES CORDEIRO DE CARVALHO","NAYANA DIAS PEREIRA DE SOUZA","EMILLY CASTOR DOS SANTOS","LAYSA ALVES DE MELO","CLAUDIA DA COSTA MONTEIRO","JOELINTON SANTOS SOUZA","LAURA MELISSA TORRES GUEDES","STEPHANY DA SILVA FRANCA","PEDRO AUGUSTO QUEIROZ CARNEIRO DA SILVA","JOSE FELIPE BRASILEIRO SILVA","BIANCA DA SILVA VILARIM","DEYSE KELLY WANDERLEI DE MELO","EDUARDO DE SOUZA SOARES","LAYZA GABRIELY DA SILVA SANTOS","MARINA LUIZA VIEIRA","MARIA CLARA PEREIRA CARVALHO GOMES","LEONARDO TOMAZ DA SILVA","VITOR LUNA MENEZES DE ARAUJO LIMA","MATEUS PEREIRA TAVARES DE ARAUJO","FRANCIELLEN SOUZA SILVA","EBENEZER ALVES DE SOUZA JUNIOR","EVERTON DE SOUSA GARCIA","STEFANY DE BARROS FERREIRA FREITAS","NATALY BEATRIZ PEREIRA DA SILVA","EMILLY APARECIDA ARAUJO DA SILVA","JOAO VICTOR DE OLIVEIRA NUNES","JOANA D ARC LIMA PEREIRA","MYLENA MAYARA DA SILVA CAXIAS","KAROLLYNE GONCALVES DE CARVALHO","BRUNO DA COSTA ALMEIDA","ALLISON LEVY DE LIMA SILVA","ITALO MATEUS REGO LIMA","FLAVIA MUNIZ DOS SANTOS","PAULO HENRIQUE VIEIRA ALVES","EMANUEL MESSIAS ANTONIO DA SILVA","HELLEN DE SOUSA RIBEIRO","YSADORA OLIVEIRA SIQUEIRA","CAMILA REGINA DE LUCENA FERNANDES","JONNATHAN DANTAS MEDEIROS","LUCAS SAMUEL LOPES DOS SANTOS","RENNAN CRHISTHOPHIR DO NASCIMENTO SILVA","CAIQUE ALEXANDRE ALBUQUERQUE LUCENA","LUCAS ALVES SALDANHA","MICHAEL DOUGLAS DE OLIVEIRA MELO","DAYANE EVELYN MACIEL DA SILVA","MATEUS DOS SANTOS GOMES DE BARROS","KAUA HENRIQUE CARDOSO SANTOS","THAYNARA CRISTINA MONTEIRO URTIGA","MARIA CAMILY DE ANDRADE OLIVEIRA","ADNA GISELE CORREIA FERREIRA DA SILVA","GABRIEL ALENCAR DANTAS","BRUNO RAFAEL BEZERRA DE LIMA","GABRIELA CUNHA MEDEIROS","BARBARA STEFANNY DE SOUZA ALCANTARA","NICOLE SOUSA SANTOS","BEATRIZ ROSA DOS SANTOS","LUCAS ALEXANDRE GOMES BAZANTE","BRENO MIGUEL CLEMENTINO MEDEIROS","ARTHUR DA SILVA LIMA","EVERALDO JUNIOR DE SOUZA ALVES PEQUENO","DAVID OLIVEIRA ALVES","PAULO GABRIEL ALVES MIRANDA","TAMIRES BATISTA LIMA","ANDRIELLE ALVES PAIXAO","WILLIAN WALLACE RAMOS DA SILVA","WILLIAN ALVES DE LIMA","WELERSON HENRIQUE DA SILVA CAVALCANTI","SAVIA ARIELLE SOARES SANTOS","JHOELY ARAGAO DA SILVA","ISIS TEIXEIRA DE OLIVEIRA","PAULO HENRIQUE RUFINO DA SILVA","EMILLY THAISA MENEZES DOS SANTOS","WILLIAN ALVES DE SOUZA SILVA","ERIKA KELLA DE QUEIROZ BALBINO","MIGUEL SOUSA DOS SANTOS PATRICIO","MYGUEL PEREIRA RODRIGUES","LIVIA SANTOS NOBREGA","PEDRO HENRIQUE HONORATO DOS SANTOS","SAYMARA CARVALHO DE ALBUQUERQUE","LARISSA GABRIELY COSTA PIRES","MARIA TARSILA SUELLEN RAMOS SANTOS","CINTHIA RAQUEL DOMINGOS DE LIMA","ANTONIA JESSIANE ALMEIDA DA CUNHA","VINICIUS ISMERALDO SOUZA VERAS","IKHOL HADJHI GOMES SILVA","THATIANA DE OLIVEIRA LIMA","LAZARO DA CRUZ SILVA","CASSIO DO NASCIMENTO SANTOS","LIGIA CAROLINE MARTINS SILVESTRE","JOSE LUCAS GOMES DOS SANTOS","SAMIRA KARIN ANDRE DA SILVA","SAMUEL SOARES DA SILVA","JULIO CESAR LEITE FIDELES","KLEYTON HENRIQUE HORTENCIO DA COSTA","KENYO MAILTON DA SILVA OLIVEIRA","ISMAEL MARTINS SEVERO DO NASCIMENTO","JHULLYELEN PIRES DA SILVA","EDITH MARRIEL PAULINA","GERONIMO MARCO SILVA DO NASCIMENTO","CLAUDIO PEREIRA DE SOUSA FILHO","ALAN GOMES DE ARAUJO","EDILMA MARIA BEZERRA DA SILVA","DIEGO MACEDO DOS SANTOS","JOAO VITOR OLIVEIRA DE PADUA","JANICLEIDE MARIA FAUSTINO DOS ANJOS","RAISSA MARCELINO DA SILVA","LAIS GABRIELLI MARTINS DE OLIVEIRA","RHUAN RICKELMY LEITE CABRAL","MAURICIO RODRIGUES VIEIRA","VITORIA INGRID DA SILVA","JOEL DE ANDRADE ARAUJO","MIGUEL PHELIPE GOMES DA SILVA","CAIO ALEXANDRE TINOCO NEPOMUCENO TORRES","BARBARA DA COSTA ALMEIDA","THIAGO DOS SANTOS FERREIRA","GABRIEL GONCALVES DOS SANTOS","LUIZ FERNANDO CAETANO DE MELO","YOHRAN JACOB HONFI MATOS BONAVIDES","JANAINA RAYANE LAURENTINO LEITE","JAILMA DOS SANTOS PEREIRA","CAROLANNE HEDDY LIMA MACHADO","ALYSON NICOLAS DA SILVA","PAMELA ARAUJO DA SILVA","JANDESSON ANTERO DA SILVA SANTOS","CARLOS HENRIQUE RIBEIRO DE ARAUJO","WELLINGTON DOS SANTOS DE SOUSA","JOSE CLEBSON PEREIRA DA COSTA","GABRIEL BERNARDO CUNHA","GRAZIELLE GEREMIAS RODRIGUES","ANTONY SAMUEL SOARES E MAIA","AMANDA PEREIRA SILVEIRA","GABRIEL SILVA DE LIMA","GABRIEL LUIZ CAMPOS NASCIMENTO","NAYARA DUARTE ARAUJO","ANA KAROLINE FELIX TAVARES DA SILVA","MARIA EDUARDA PEREIRA DA COSTA","LASGRAEL VICTOR ROZENDO DA SILVA","FELLIPI DA SILVA CASTRO","VERONICA CRISTINA PAIVA BATISTA DA SILVA","LIVYA RAMALHO DE FIGUEIREDO","ALEX HENRIQUE BRAZ DE SOUZA","JOSE MARREIRO DE SALES NETO","DEBORA DIANA OLIVEIRA DOS SANTOS","RAYANA DA SILVA OLIVEIRA","ANTONIO PEDRO MEIRA LIMA VIDAL","KAROLAYNE FORMIGA DA SILVA","VICTOR ROMERO COSTA DE SOUTO","KALIANE BEATRIZ MEDEIROS","JULLY CHRISTINE FERREIRA VIEIRA","JUAN CARLOS SILVA DE OLIVEIRA","JAMILE DE SOUZA MARTINS","ALBANIA GONZAGA MUNIZ ALBINO","CRISTIANE HENRIQUE DE LIMA","SAMARA DOS SANTOS GOMES","KELLY ADRIANA DE MORAIS PEREIRA","MAYARA GOMES DE SOUZA","EDKLEITON XAVIER DA COSTA","LOHAYNNE RODRIGUES DE ARAUJO","KELANE COELHO DE LIMA","FERNANDA APARECIDA DA SILVA","MATTEUS BORBOREMA CAVALCANTI","ALINE TAYNA SILVA BRANDAO","KATIA DOS SANTOS FERNANDES","ANNA JULIA BEZERRA SILVA","JANAINA JANIA DO NASCIMENTO OLIVEIRA","HAVI BARBOSA","GABRIEL PEQUENO DA SILVA SANTOS","MARTA LEANDRO DA SILVA ANDRADE","ANADY FERREIRA MACHADO","JONNAS GOMES FERNANDES","ERICK ALVES DE LIMA AMORIM"],"gerente":["Sem Gerente","AUGUSTO CESAR ESTEVAO","ALINE DE SOUZA MACEDO","WAYDSON RAMMON GUEDES DO VALE","EVELYN MOURA MENEZES DE LIMA","NARCIZO NASCIMENTO PORTELA","WESLEY DA SILVA LIMA","AMANNDA SIMAO LIMA DA SILVA","LEONARDO MOREIRA LEMOS","RODRIGO DE MORAIS BARBOSA","THIAGO ERNESTO ALVES","RENATO SOARES DA SILVA","NEIRIELE SABRINE SOUZA ROCHA","LUANN HENRIQUE SIMAO LEITE","MATHEUS DE FREITAS SANTOS","AMIRIS SOUZA PORFIRIO","MICHELE NUNES DOMINGUES","FABIO ESTEVES GONCALVES","BRUNO RAMOS FERREIRA MARCELLINO","MARIANA ISABELA LAROCERIE RODRIGUES DE LIMA","PEDRO ALMEIDA SANTOS","PATRICIA APARECIDA NUNES SOARES","GESSICA FAUSTINO GOMES","RUBENS DE LIMA GUILHERME","MATHEUS LIRA DOS SANTOS","YASMIM BATISTA ROSENO","BRUNO ISAIAS SILVA SOUZA","HALAN HENRIQUE CORREA DE ARAUJO","MICHELLE ALEIXO CARNEIRO","GLAUBER CARLOS CLARA DA COSTA","ANDRE DE SOUZA BRITO","ECILENE CRISPIM PIRES DE ARAUJO MENDONCA","CLAUDIO MARCOS DE JESUS","CELIA RUBIA CAMPOS","JOAO VICTOR DE LUNA ALVES","ANDRE LUIS PINHEIRO MIRANDA","ALESSANDRO DE CARVALHO SOUZA","KEZIA THAIS EVANGELISTA DA SILVA","JOSE FELIPE CAVALCANTE SILVA","FABIANO DE MIRANDA BAHIA","ANA CAROLINA FARIA DE ALMEIDA CAMPISTA","LIZ MARIA FERREIRA FONSECA JORGE","JESSICA DA SILVA EUFRAZIO","BRENO JESUS DE ASSIS ABREU","JOSE MARIA ALVES DO COUTO","JOBSON SOUSA FERREIRA DA SILVA","DANIELLE DE SOUZA COSTA ASSIS","SUELEN DILENE ESTANISLAU","EDNILSON RIBEIRO DA SILVA ANDRADE","RENATA GUIMARAES PINA","GRAZZIELA DA SILVA COTTA","GUSTAVO MARTINS LUCAS","YURI DANIEL DE LIMA","FRANCILEIDE LOPES BARBOSA ALIXANDRE","LISLEY BARBOSA ALVES","GISELLE CRISTINA DOS SANTOS","WAGNER ALVES PEREIRA","ALEFF AZEVEDO DIAS"],"cargo":["SUPERINTENDENTE DE PESSOAS","ANALISTA DE QUALIDADE SENIOR","DESENVOLVEDOR DE SISTEMAS PLENO","TECNICO DE SUPORTE JUNIOR","ANALISTA DE MELHORIA CONTINUA PLENO","ATENDENTE","ANALISTA DE PLANEJAMENTO PLENO","ASSISTENTE DE PESSOAS","ATENDENTE I","ANALISTA DE QUALIDADE JUNIOR","AGENTE ESPECIALISTA I","ATENDENTE III","ASSISTENTE JURIDICO","AUXILIAR DE OPERACAO","INSTRUTOR DE TREINAMENTO","SUPERVISOR DE OPERACAO","ANALISTA DE PESSOAS PLENO","APRENDIZ DE TELESSERVICOS","MONITOR DE QUALIDADE","AUXILIAR ADM DE PESSOAL","AGENTE ESPECIALISTA II","ATENDENTE II","AUXILIAR DE PLANEJAMENTO","SUPERVISOR DE OPERACAO I","AUXILIAR DE PESSOAS","DESIGNER INSTRUCIONAL JUNIOR","COORDENADOR DE PESSOAS II","TECNICO DE ENFERMAGEM DO TRABALHO","ANALISTA DE QUALIDADE PLENO","AUXILIAR ADMINISTRATIVO","ANALISTA ADM DE PESSOAL JUNIOR","ANALISTA DE PESSOAS JUNIOR","ANALISTA DE CONTEUDO JUNIOR","AGENTE DE QUALIDADE","ANALISTA ADMINISTRATIVO JUNIOR","ANALISTA DE MELHORIA CONTINUA SENIOR","SUPERVISOR ADMINISTRATIVO DE OPERACAO","ANALISTA DE CONFORMIDADE E RISCOS DE SEGURANCA DA INFORMACAO PLENO","INSTRUTOR DE DESENVOLVIMENTO I","ANALISTA DESENVOLVIMENTO OPERACIONAL SENIOR"],"operacao":["TREINAMENTO","QUALIDADE PREMIUM","SISTEMAS","TI","MELHORIA CONTINUA","ODONTOPREV","CNU PA FIXA","VIVO MOVEL PME","VIVO RETENCAO PURPURA NEXT","VIVO PERDA E ROUBO","MERCADO LIVRE","PLAN PREMIUM","PRIVALIA","NIIC","GRUPO SBF","ATHENA SAUDE","VIVO FIXO PURPURA","VIVO ONE F SLAV","VIVO LOCALIZA CLIENTE","TERRA","VIVO FIXO PME","VIVO MOVEL PURPURA NEXT","VIVO FIXO PME FIDELIZAR","BRADESCO FINANCIAMENTO","VIVO GESTAO EXPEC RECEP","BRADESCO SAC ALO","TERRA CHAT","NUBANK","MERCADO LIVRE RECLAME AQUI","VIVO MOVEL RECOVERY","VIVO MOVEL SILVER NEXT","VIVO COBRANCA RECEPTIVO","VIVO MONEY","VIVO OUTBOUND","TRABALHISTA","BRADESCARD ATENDIMENTO P2","UNIMED JP","VIVO GESTAO DE EXPECTATIVA","VIVO MONEY COB","DASA SAC","ITAU JURIDICO","ITAU PERSONNALITE","VIVO OUTBOUND HUB","PERTO DE VOCE","RECARGA PAY","NUBANK N3","BRADESCO BARE","BRB CARD","MEDICINA","VIVO REAGENDAMENTO","VIVO PAY OUVIDORIA","EAD","GESTAO E CULTURA","MANUTENCAO","ADM DE PESSOAS","TERRA BKO IMPLANTACAO","TERRA BKO UNIFICADO","BUSINESS PARTNER","MEDIDAS DISCIPLINARES","ODONTO PREV","AGENTE EM CASA","VIVO MOVEL AUDITORIA","GOVERNANCA DE SEG","DESENVOLVIMENTO OPERACIONAL"],"cidade":["JP"],"diretor":["PATRICIA FELIPE DE OLIVEIRA","BREMERSON GOIS DE SIQUEIRA","GUSTAVO CAVALCANTI MORAIS","GUSTAVO ANTONIO WANDERLEY TEIXEIRA","BOLIVAR DUARTE MOROSSINO","JULIANA APARECIDA DE PAULA JANUZZI","MARCELO DUTRA DA SILVA","GISELE APARECIDA DOMINGUES MASETTI","LUCIANO RAMOS VIAL","GABRIEL XAVIER COSSICH","JAIME FERREIRA DE MACEDO MOURA","GISELE DE CASTRO MARQUES","FLAVIO LUIZ CUNHA DE SOUZA","FLAVIA NEVES TOMAGNINI","FAGNER EUSTAQUIO ANDRADE SILVA","JOSE WELLINGTON FLORENCIO DA SILVA","ALEXANDRE FERREIRA FARIA","JOAO LUIZ NORONHA LUZ","LEONARDO PEREIRA LACERDA","JACKSON BRUNO DE ALMEIDA"]},"rows":[["YVETHLANE ALVES DE FARIA",0,0,0,0,0,0,0,0,0,0],["YVETHLANE ALVES DE FARIA",1,0,0,0,0,0,0,0,0,0],["LEANDRO LINCOLN RODRIGUES",0,0,1,1,0,1,1,1,0,1],["flavio mesquita marinho filho",0,0,2,0,0,0,2,2,0,2],["JOAO PEDRO RODRIGUES COSTA",0,0,3,2,0,0,3,3,0,3],["NAUM FELIPE SOUZA DE LACERDA OLIVEIRA",0,0,1,1,0,1,4,4,0,4],["MATHEUS BENEVIDES FONSECA DE SA MARQUIM",0,0,4,3,1,2,5,5,0,5],["MIGUEL ALVES DE OLIVEIRA",0,0,4,3,1,2,5,5,0,5],["JONIELLY CASTRO GOIS",0,0,4,3,2,2,5,5,0,5],["Lidianne Pontes dos Santos",0,1,4,3,3,2,5,5,0,5],["THACYLA RENATA MOURA DA SILVA",0,0,4,3,2,2,5,5,0,5],["Etally Nicole dos Santos Azevedo Nobrega",0,0,4,3,2,2,5,5,0,5],["Yasmin Gabrielly Medeiros de Barros",0,0,4,4,4,2,5,5,0,5],["Joyciane arquilino Rodrigues",0,0,4,3,2,2,5,5,0,5],["ELOISA THAINA COSTA FERREIRA DA SILVA",0,0,4,4,4,2,5,5,0,5],["Caio Antony da Silva Nascimento",0,1,4,3,5,2,5,5,0,5],["Eduardo da Silva Ribeiro",0,0,4,3,2,2,5,5,0,5],["Ruan da Costa Xavier Pinto",0,0,4,4,6,2,5,5,0,5],["LUIS OTAVIO PESSOA DA SILVA",0,0,4,4,6,2,5,5,0,5],["Sabrina Ismael Pereira",0,0,4,4,6,2,5,5,0,5],["Mayanne Alves Da Costa",0,0,4,4,6,2,5,5,0,5],["Monica Vitoria Mendes da Silva",0,0,4,4,7,2,5,5,0,5],["MARIA JULIA SANTOS CAMELO",0,0,4,3,1,2,5,5,0,5],["Aldo Baltar Viana Neto",0,0,4,4,6,2,5,5,0,5],["LUANA SOARES ROCHA",0,0,4,3,1,2,5,5,0,5],["JOAO VICTOR ARAUJO DO NASCIMENTO",0,0,4,4,7,2,5,5,0,5],["LIVIA DA SILVA PAULO",0,0,4,3,2,2,5,5,0,5],["Davyson William Menezes de Lima",0,0,4,3,1,2,5,5,0,5],["JOAO ANTONIO CORREIA DA CUNHA",0,0,4,3,2,2,5,5,0,5],["BARBARA NAYLLY ARAUJO PEIXOTO",0,0,4,5,8,3,5,6,0,5],["HIASLINE KEZIA GUEDES DO NASCIMENTO",0,0,4,5,9,3,5,6,0,5],["Laura Pereira Rodrigues da Silva",0,0,4,6,10,3,5,6,0,5],["KAUANNY CARVALHO BEZERRA COSTA",0,0,4,5,9,3,5,6,0,5],["IASMIN VITORIA ALBERTINO DOS SANTOS",0,0,4,5,8,3,5,6,0,5],["Victor Augusto da Costa Leite",0,0,4,5,11,3,5,6,0,5],["GEOVANI DE SOUZA SILVA",0,0,4,7,12,4,5,7,0,6],["Mayza de Souza coelho",0,0,4,8,13,5,5,8,0,7],["Ricardo Bruno Travassos Peixe",0,0,4,8,13,5,5,8,0,7],["IURYANDERSON DUNGA FIRMINO DA SILVA",0,0,4,9,14,6,5,9,0,6],["SUILTON FAGNER DA SILVA SANTOS",0,0,4,10,15,7,5,10,0,8],["Samuel Barbosa Pereira",0,0,4,10,15,7,5,10,0,8],["Breno Gomes de Almeida",0,0,4,10,16,7,5,10,0,8],["JOEDSON RUFINO DE LIMA",0,0,4,11,17,8,5,10,0,8],["Vanderleia Virginio do Nascimento",0,0,4,11,18,8,5,10,0,8],["JOAO CARLOS DO NASCIMENTO PEREIRA",0,0,4,12,19,8,5,10,0,8],["Sarah de Oliveira Cunha",0,0,4,11,20,8,5,10,0,8],["Rebeca Ferreira da silva",0,0,4,12,21,8,5,10,0,8],["JOAO VICTOR FREIRE GOMES",0,0,4,12,22,8,5,10,0,8],["Isabel layane de sousa vasconcelos",0,0,4,11,23,8,5,10,0,8],["LAIANE PEREIRA VIEIRA",0,0,4,11,24,8,5,10,0,8],["Matheus Albuquerque Gomes",0,0,4,11,23,8,5,10,0,8],["VITOR VINICIUS BARBOSA ALVES",0,1,5,13,0,9,6,11,0,9],["VICTOR HUGO MESSIAS DA SILVA",0,1,4,14,25,10,5,12,0,10],["Guilherme Ferreire Da Cruz",0,0,4,12,26,8,5,10,0,8],["Emanuelle Victoria Vicente Silvano",0,0,4,12,19,8,5,10,0,8],["LIDIA KAROLYNE BEZERRA DE SOUSA",0,0,4,11,23,8,5,10,0,8],["PAMELA SONALI BARBOSA DA SILVA",0,0,4,11,24,8,5,10,0,8],["Breno Artur Alves da Silva",0,0,4,11,23,8,5,10,0,8],["Jennifer Ketilyn Oliveira Passos",0,0,4,11,23,8,5,10,0,8],["Janielly Karolyne Santos de Albuquerque",0,0,4,11,24,8,5,10,0,8],["Gabriel De Almeida Batista",0,1,4,4,27,2,5,5,0,5],["EMILLY CARDOSO GUIMARAES",0,0,4,4,28,2,5,5,0,5],["Emilly Elizabete de Lima Cesar Silva",0,0,4,4,28,2,5,5,0,5],["Bruna Evelyn Gomes Duarte",0,0,4,15,29,11,5,10,0,8],["MAURICIO MONTEIRO",0,0,4,15,29,11,5,10,0,8],["Emanuel Barbosa Costa",0,0,4,5,9,3,5,6,0,5],["ANTONIO ALBERTO CESAR LISBOA",0,0,4,5,9,3,5,6,0,5],["LAYONNE SERGIO DA SILVA MACHADO",0,0,4,6,30,3,5,6,0,5],["Eliabner Pereira Carneiro",0,0,4,6,31,3,5,6,0,5],["JOSE HERLAN LIBERATO NASCIMENTO",0,0,4,6,10,3,5,6,0,5],["Maria Esther Gomes Ferreira",0,0,4,6,31,3,5,6,0,5],["Vivian Yasmin Tavares da Silva",0,0,4,6,10,3,5,6,0,5],["MERCIA FERNANDA DAVILA DA SILVA VIEIRA",0,0,4,6,10,3,5,6,0,5],["Josiele samara santos de Andrade",0,0,4,5,9,3,5,6,0,5],["Daniel de Lima Pereira Junior",0,0,4,5,9,3,5,6,0,5],["Beatriz da Silva Souza",0,0,4,5,9,3,5,6,0,5],["Joselita Aureana Rodrigues de Sousa",0,0,4,6,10,3,5,6,0,5],["JULIANA GONCALVES CALISTO SILVA",0,1,4,14,32,10,5,12,0,10],["WELLYDA EVELYN SOARES DOS SANTOS",0,0,4,4,4,2,5,5,0,5],["CARLOS GABRIEL CURIOSO DE CASTRO",0,0,4,4,7,2,5,5,0,5],["Maria Evelyn dos Santos Nascimento",0,1,4,4,27,2,5,5,0,5],["ANGELO JULIO SOARES MENDES",1,1,4,3,3,2,5,5,0,5],["Edlon Rocha do Nascimento",0,1,4,4,33,2,5,5,0,5],["LAISE DA CONCEICAO BARROS",0,2,4,4,33,2,5,5,0,5],["WELLISON LUIZ RODRIGUES DOS SANTOS",0,1,4,15,29,11,5,10,0,8],["Julielly Emanuela Rodrigues Cavalcante",0,0,4,11,34,8,5,10,0,8],["Amanda Cirilo",0,0,4,11,20,8,5,10,0,8],["INGRID CAROLINE DA SILVA SOUSA",0,1,0,0,35,12,7,13,0,0],["GISELLE CRISTINA SILVA DE FREITAS",0,0,4,16,36,13,5,10,0,8],["THAIS PEREIRA FERNANDES",0,0,4,11,37,8,5,10,0,8],["Brena Bezerra Alves",0,0,4,17,38,14,5,10,0,8],["Bruna Gabrielle da Silva Mesquita",1,0,4,18,39,15,5,14,0,10],["Kalyne Barbosa da Costa",0,0,4,6,31,3,5,6,0,5],["Maria Eduarda Esayobi Cavalcante Rodrigues",0,0,4,6,31,3,5,6,0,5],["MARIA DAS GRACAS BATISTA DOS SANTOS FELIPE",0,0,4,15,40,11,5,10,0,8],["DAVI PATRICIO DE LIMA",0,0,4,11,41,8,5,10,0,8],["Damares Santos De Sousa",0,0,4,11,37,8,5,10,0,8],["RIQUELMY CEZAR ALVES PONTES",0,0,4,15,29,11,5,10,0,8],["ESHILLY MARIA DA SILVA",0,0,4,11,24,8,5,10,0,8],["MARIA EDUARDA MEDEIROS COSTA",0,0,4,11,20,8,5,10,0,8],["FELIPE DA SILVA SANTOS",0,0,4,12,42,8,5,10,0,8],["Izabele Fernandes da Silva",0,0,4,10,43,7,5,10,0,8],["PATRICIA DA SILVA NOBREGA",0,0,4,17,44,14,5,10,0,8],["Maria Gabriele Ferreira Rolim",0,0,4,17,44,14,5,10,0,8],["RAFAELA NASCIMENTO DE LIRA",0,0,4,17,44,14,5,10,0,8],["Luciana dos santos nascimento",0,1,4,4,45,2,5,5,0,5],["ESTEFANY SILVA XAVIER",1,1,4,4,45,2,5,5,0,5],["CRISTIANO FERNANDES COSTA",0,0,4,5,8,3,5,6,0,5],["ANA CAROLINA MAGALHAES SANTORO",0,0,4,5,9,3,5,6,0,5],["MAROLLY SAMARA DE OLIVEIRA SANTOS",0,0,4,6,10,3,5,6,0,5],["PEDRO HENRIQUE VIEIRA DA SILVA",0,0,4,6,10,3,5,6,0,5],["VITORIA KERSUL VIEIRA",0,0,4,15,29,11,5,10,0,8],["MICHELLY EMELY BRITO DE CASTRO",0,0,4,16,36,13,5,10,0,8],["Cleiton de Andrade Fernandes",0,0,4,16,46,13,5,10,0,8],["Daniel Marx Elias de Castro",0,1,4,16,47,13,5,10,0,8],["JESSICA BORGES DO NASCIMENTO",0,0,4,19,48,16,5,15,0,5],["ANA VITORIA DE LACERDA BATISTA",0,0,4,20,49,15,5,14,0,10],["ALLAN CESAR BARRETO MATIAS",1,0,4,4,4,2,5,5,0,5],["DANIEL OFFREDI XAVIER",0,0,4,21,50,6,5,16,0,6],["JOAO VICTOR LIMA NUNES",0,0,4,21,51,6,5,16,0,6],["ROBERT HERCULANO SILVINO SOARES",0,0,4,21,51,6,5,16,0,6],["Rayssa Cristina Pandorra dos Santos",0,0,4,22,52,4,5,17,0,6],["LETICIA SANTOS ALVES",0,0,4,23,53,8,5,10,0,8],["GABRIEL JUNQUEIRA DE ALMEIDA",0,0,4,21,51,6,5,16,0,6],["Elane Santos Silva",0,0,4,24,54,17,5,18,0,6],["JOYCE VITORIA DE LIMA DUARTI",0,0,4,21,55,6,5,16,0,6],["GUIOMAR BARBARA APARICIO PEREIRA",0,0,4,21,55,6,5,16,0,6],["Welson Gomes da Silva",0,0,4,21,55,6,5,16,0,6],["Cibelli Monteiro Campos",0,0,4,22,52,4,5,17,0,6],["JOSE CARLOS MUNIZ RIBEIRO",0,1,4,9,56,6,5,9,0,6],["MATHEUS SIQUEIRA CORREIA",0,0,4,25,57,8,5,10,0,8],["Luciana Morais da silva",0,0,4,23,58,8,5,10,0,8],["JACKSON ARAUJO DE LIMA",0,0,4,23,59,8,5,10,0,8],["Amanda do Nascimento Oliveira",0,0,4,23,60,8,5,10,0,8],["LIVIA SILVESTRE DA NOBREGA",0,0,4,23,61,8,5,10,0,8],["Camila Pessoa e silva",1,1,4,4,45,2,5,5,0,5],["Clara Luna Paulino Maciel",0,0,4,3,62,2,5,5,0,5],["Clara Luna Paulino Maciel",1,1,4,3,62,2,5,5,0,5],["Mikaele Alves Cavalcante",1,1,4,3,63,2,5,5,0,5],["Maria Camilly De Brito Arruda",0,0,4,19,48,16,5,15,0,5],["JULIA HELLEN ALMEIDA DE LUCENA",0,0,4,26,64,0,5,19,0,7],["Jeannerys da Silva Lemos",0,0,4,26,64,0,5,19,0,7],["Luciene Antonia Cortes do Carmo",0,1,4,26,65,0,5,19,0,7],["RENATA PATRICIA GERMANO DOS SANTOS",0,0,4,7,66,4,5,7,0,6],["khrisley karlen batista da silva",0,0,4,7,67,4,5,7,0,6],["madja rodrigues guedes",0,0,4,7,68,4,5,7,0,6],["MARIA VITORIA SANTOS DE SOUZA",0,0,4,7,12,4,5,7,0,6],["LUANA VITORIA DE LIMA NUNES",0,0,4,7,68,4,5,7,0,6],["VITORIA MARIA SOARES GONCALVES",0,0,4,7,12,4,5,7,0,6],["HELDER BEZERRA DE LIMA JUNIOR",0,0,4,7,69,4,5,20,0,6],["Jonatha Antonio de Menezes",0,0,4,7,69,4,5,20,0,6],["AURORA CECILIA SANTOS DE SOUZA",0,0,4,7,69,4,5,20,0,6],["Paulo Henrique Araujo De Sales",0,0,4,7,69,4,5,20,0,6],["Lucas Kauan Normanda Viana",0,0,4,27,70,13,5,10,0,8],["Wismara Yachnne Ferreira da Silva",0,0,4,19,48,16,5,15,0,5],["Maria Fernanda do Nascimento Silva",0,0,4,19,48,16,5,15,0,5],["Carlos Henrique Lucena Da Silva",0,0,4,28,71,11,5,10,0,8],["Ingrid Pordeus Formiga Oliveira",0,0,4,29,72,18,5,21,0,7],["YOHAN MITSUO PIMENTEL FUGIWARA",0,0,4,25,73,8,5,10,0,8],["EDINALDO CARDOSO DE SOUZA",0,0,4,7,74,4,5,22,0,6],["NATALIA KETYLLEN SANTOS FRANCA",0,0,4,7,68,4,5,7,0,6],["MATHEUS RODRIGUES DOS SANTOS",0,0,4,10,16,7,5,10,0,8],["JOAO VICTO DA SILVA LINHARES",0,0,4,28,75,11,5,10,0,8],["Pedro lucas domingos Lima",0,1,4,28,76,11,5,10,0,8],["MARIANNE MATIAS GONCALVES",0,0,4,30,77,14,5,10,0,8],["GABRIELA ALVES DE VASCONCELOS",0,0,4,7,74,4,5,22,0,6],["Rebeca Carvalho Rosa",0,0,4,7,78,4,5,22,0,6],["NIELMA BARROS SILVA",0,0,4,7,74,4,5,22,0,6],["Vanessa Evelyn Araujo do Carmo",0,0,4,7,78,4,5,22,0,6],["GILSON CUNHA REBOUCAS NETO",0,0,4,7,74,4,5,22,0,6],["ANA BEATRIZ SILVA DA PAZ",0,0,4,7,74,4,5,22,0,6],["CAMILLY VITORIA FERREIRA BARBOSA",0,0,4,7,78,4,5,22,0,6],["ANA KAROLYNE SALVINO BARBOSA",0,0,4,7,78,4,5,22,0,6],["EMILLY VITORIA DA SILVA CRUZ",0,0,4,7,74,4,5,22,0,6],["Higor Ferreira Batista",0,0,4,8,79,5,5,8,0,7],["Leticia Evellyn Oliveira Soares",0,0,4,8,79,5,5,8,0,7],["LUIS AUGUSTO SILVA MENDONCA",0,0,4,8,79,5,5,8,0,7],["Maria Monica Ferreira Campos",0,0,4,26,64,0,5,19,0,7],["Kleyton rafael da silva pereira",0,0,4,26,64,0,5,19,0,7],["Rafael Paello Lott",0,0,4,29,80,18,5,21,0,7],["Perla Thaina da Silva Cena",0,0,4,17,38,14,5,10,0,8],["TAISA DE OLIVEIRA LIMA",0,0,4,17,81,14,5,10,0,8],["CANDIDA REBECA DOS SANTOS DE CARVALHO",0,0,4,25,82,8,5,10,0,8],["Gabriela Alves do Nascimento",0,0,4,17,83,14,5,10,0,8],["Maria Amanda de Oliveira Santos",0,0,4,10,16,7,5,10,0,8],["Danielly Cristiny Pereira de Souza",0,0,4,17,81,14,5,10,0,8],["RITA DE CASSIA DOS SANTOS CARDOSO",0,0,4,17,81,14,5,10,0,8],["Raquel Lima Dantas",0,0,4,17,84,14,5,10,0,8],["Geysielly oliveira alves",0,1,4,3,63,2,5,5,0,5],["Geysielly oliveira alves",1,1,4,3,63,2,5,5,0,5],["GABRIELA VITORIA SANTOS DA SILVA",0,0,4,31,85,13,5,10,0,8],["JOAO VICTOR MONTEIRO GOMES",0,0,4,10,86,7,5,10,0,8],["JOAO VICTOR MONTEIRO GOMES",1,0,4,10,86,7,5,10,0,8],["HELIAN AUGUSTO DA SILVA RUFINO",0,0,4,31,87,13,5,10,0,8],["LAURO VINICIUS SANTOS CAFE",1,1,4,3,88,2,5,5,0,5],["Gesiane Oliveira da Silva",0,1,4,3,63,2,5,5,0,5],["Gesiane Oliveira da Silva",1,1,4,3,63,2,5,5,0,5],["EDUARDA APOLINARIO LIMA",0,0,4,17,84,14,5,10,0,8],["Larissa Camilla santo da Silva",0,0,4,17,84,14,5,10,0,8],["VIVIAN RAFAELA CABRAL DA CRUZ",0,1,4,17,38,14,5,10,0,8],["Alberto Filho Soares de Oliveira",0,0,4,31,87,13,5,10,0,8],["Fernanda Emilly Souza Dias",0,0,4,27,89,13,5,10,0,8],["Alexandro Gomes da Silva",1,0,4,32,90,8,5,10,0,8],["Josiane Lima da Silva",0,0,4,29,91,18,5,21,0,7],["nayane santos soares",1,0,4,32,90,8,5,10,0,8],["Calyane Nicole Pereira Coutinho Aguiar",0,1,4,32,90,8,5,10,0,8],["Calyane Nicole Pereira Coutinho Aguiar",1,0,4,32,90,8,5,10,0,8],["GABRIEL ARCANJO LEONIO DOS SANTOS",0,0,4,33,92,13,5,10,0,8],["ARTHUR ERWIN SANTINO DA SILVA",0,0,4,29,80,18,5,21,0,7],["Thamiris Gomes duarte",0,0,4,29,93,18,5,21,0,7],["Maria Heloisa Moreira da Silva",0,1,4,29,94,18,5,21,0,7],["HAGATA MONTEIRO CONCEICAO DOS REIS",0,0,4,29,95,18,5,21,0,7],["Maria Aline Martins do Amarante",0,0,4,29,96,18,5,21,0,7],["Larissa Ferreira de sousa",0,0,4,29,93,18,5,21,0,7],["THAIS STEFFANY GADELHA DA SILVA",0,0,4,29,97,18,5,21,0,7],["KAUANY PEREIRA DA SILVA",0,0,4,29,98,18,5,21,0,7],["ERIVAN BRASILIANO RODRIGUES DINIZ",0,1,4,29,72,18,5,21,0,7],["JULIA MANUELLA ALEIXO DE ARAUJO DA SILVA",0,0,4,29,95,18,5,21,0,7],["MIGUEL LUCENA BARROS",0,0,4,29,97,18,5,21,0,7],["KATARYNE FREITAS NOLETO DOS SANTOS",0,0,4,29,91,18,5,21,0,7],["KAROLAYNE SIMOES CEZAR DA SILVA",0,0,4,29,93,18,5,21,0,7],["GERNILANE CALDEIRA SOUZA",0,0,4,29,72,18,5,21,0,7],["JULIA ALICE MEIRA DOS SANTOS",0,0,4,29,94,18,5,21,0,7],["ANDERSON OLIVEIRA DOS SANTOS",0,0,4,29,99,18,5,21,0,7],["Raul cezar mendonca de siqueira",0,0,4,33,100,13,5,10,0,8],["Pedro Henrique Trajano Neves",0,1,4,29,80,18,5,21,0,7],["Elienai Karine da Silva Santos",0,0,4,29,97,18,5,21,0,7],["Byanka Nycole Alves Dos Santos",0,0,4,27,89,13,5,10,0,8],["MIKAEL ESTEVAO DE CARVALHO DIAS FRADE",0,0,4,33,101,13,5,10,0,8],["Antonio Marcos da Silva Alves",0,0,4,33,100,13,5,10,0,8],["Silmara Joyce da Silva Nascimento",0,0,4,29,99,18,5,21,0,7],["Bruno Rafael Onofre Ferreira Araujo",0,0,4,7,102,4,5,7,0,6],["ALLANY FELIX TENORIO",0,0,4,7,67,4,5,7,0,6],["VIVIANI CIPRIANO BELONIA",0,1,4,9,14,6,5,9,0,6],["Sara Vitoria Santana da Silva",0,0,4,16,103,13,5,10,0,8],["Thalita Silva de Souza",0,1,4,34,104,19,8,23,0,11],["LETICIA ALMEIDA DE ARAUJO",0,0,4,35,105,7,5,10,0,8],["Soffia Fernandes Torquato Lopes",0,0,4,16,106,13,5,10,0,8],["Kamily Kelly Fortunato Nunes",0,1,4,36,107,11,5,10,0,8],["Andressa Avelino Ribeiro",0,1,4,32,108,8,5,10,0,8],["Andressa Avelino Ribeiro",1,0,4,32,108,8,5,10,0,8],["ADRIEL LOPES SOARES",0,0,4,16,106,13,5,10,0,8],["BIANCA DA SILVA FRANCO",0,0,4,35,105,7,5,10,0,8],["Jessyane Kamilly Rodrigues Coutinho",1,0,4,32,90,8,5,10,0,8],["THEO MARCOS RAMOS NOGUEIRA LOPES",0,0,4,35,105,7,5,10,0,8],["Bianca Heloiza Martins Oliveira",0,0,4,16,109,13,5,10,0,8],["Valmir Araujo Costa Neto",0,1,4,36,110,11,5,10,0,8],["CLEYTON DE SOUSA GOMES",0,1,4,36,110,11,5,10,0,8],["Maxwel Queiroz do Nascimento",0,1,4,37,111,7,5,10,0,8],["Adjailson da Cruz Moura",0,0,4,35,112,7,5,10,0,8],["Breno Chaves Dutra Canuto",0,1,4,37,113,7,5,10,0,8],["Waldick Bezerra de Brito Junior",0,0,4,35,105,7,5,10,0,8],["JOHN VICTOR BARBOSA DE ALMEIDA",0,1,4,38,114,6,5,24,0,6],["PEDRO SILVA FERNANDO",0,1,4,21,51,6,5,16,0,6],["MATHEUS FONSECA SILVA",0,1,4,9,56,6,5,9,0,6],["MATHEUS FONSECA SILVA",1,1,4,9,56,6,5,9,0,6],["Daleth Queren Franca dos Santos de Sena Moreira",0,0,4,36,115,11,5,10,0,8],["Ivanilson de Freitas Barbosa",0,0,4,15,116,11,5,10,0,8],["Sidney de lira Silva",0,0,4,36,117,11,5,10,0,8],["MAYARA VALESKA CAVALCANTI SILVA DE OLIVEIRA",0,1,4,36,110,11,5,10,0,8],["LETICIA ELLEN PEREIRA DA SILVA",0,0,4,23,53,8,5,10,0,8],["Renatha Cristina Oliveira da Silva",0,0,4,36,117,11,5,10,0,8],["Anna Catharina Rufino Leoncio Cavalcante de Araujo",0,0,4,36,118,11,5,10,0,8],["JORGE LUIS SANTOS MARCELINO",0,0,4,16,119,13,5,10,0,8],["EGBERTO JOSE CARNEIRO",0,0,4,28,120,11,5,10,0,8],["Gustavo Henrique de Oliveira Nascimento",0,0,4,36,115,11,5,10,0,8],["JOAO VICTOR SANTOS BELMIRO DA SILVA",0,0,4,28,75,11,5,10,0,8],["Kellyson Pedro da Silva Santos",0,0,4,35,121,7,5,10,0,8],["Ruan Gabriel Gomes da Silva",0,0,4,35,121,7,5,10,0,8],["Sarah Quezia Melo Silva",0,1,4,37,113,7,5,10,0,8],["TAYRONNE DA SILVA PEREIRA JUNIOR",0,1,4,35,122,7,5,10,0,8],["GRAZIELA GOMES RODRIGUES",0,1,4,35,123,7,5,10,0,8],["Givanilson Fernandes da Silva",0,1,4,26,65,0,5,19,0,7],["MARIA WENDY FRANCA CAVALCANTI SOARES",0,1,4,39,124,19,5,25,0,11],["Kennedy do Nascimento Lima Marques",0,1,4,26,65,0,5,26,0,7],["Thayane Beatriz Lopes",0,0,4,36,125,11,5,10,0,8],["Luan Emmanoel Fagundes De Oliveira",0,0,4,28,120,11,5,10,0,8],["Ana Beatriz Silva de Souza",0,0,4,28,75,11,5,10,0,8],["Maria Sophia Ramos dos Santos",0,0,4,31,126,13,5,10,0,8],["AMANDA VITORIA DA COSTA MEDEIROS",0,0,4,31,127,13,5,10,0,8],["BRUNO GOMES PEREIRA RIBEIRO",0,0,4,31,128,13,5,10,0,8],["Eric Diogo Duarte Pereira",0,0,4,31,128,13,5,10,0,8],["LETICIA DIAS DA SILVA",0,1,4,31,129,13,5,10,0,8],["Glaucia aparecida monteiro",0,0,4,31,127,13,5,10,0,8],["Samira Gabrielly de Oliveira Sousa",0,1,4,26,64,0,5,26,0,7],["KALIENE PEREIRA DE MENEZES DE OLIVEIRA",0,1,4,26,64,0,5,19,0,7],["ANNA JULLIA DE SOUSA THOMAZ",0,1,4,26,65,0,5,26,0,7],["THAUANNY RAYANNY DE OLIVEIRA SOUSA",0,0,4,29,91,18,5,21,0,7],["Gabriela Pereira da Silva",0,0,4,26,65,0,5,19,0,7],["JOSE GONCALVES DE ALMEIDA NETO",0,1,4,26,65,0,5,26,0,7],["SANDRO LUCIO FRUTUOSO QUEIROZ",0,1,4,26,65,0,5,26,0,7],["LAVOISIER GOMES BARBOSA",0,1,4,22,130,4,5,17,0,6],["MARLINDO ANSELMO GOMES DOS SANTOS JUNIOR",0,1,4,7,68,4,5,7,0,6],["JOANA VIRGINIA GUEDES DA NOBREGA",0,0,4,22,130,4,5,17,0,6],["ISAC PEREIRA TONON",0,1,4,22,131,4,5,17,0,6],["VITORIA FELINTO DA SILVA FELIX",0,0,4,22,132,4,5,17,0,6],["VANESSA APARECIDA BRILHANTE DA SILVA",0,1,4,22,52,4,5,17,0,6],["LUIZA ESTEFANY DA SILVA",0,1,4,22,131,4,5,17,0,6],["LUIZA ESTEFANY DA SILVA",1,0,4,22,131,4,5,17,0,6],["LUIZ CARLOS FENELON GONCALVES JUNIOR",0,1,4,22,133,4,5,17,0,6],["KAUA VITOR DIAS NEVES",0,0,4,22,132,4,5,17,0,6],["JULIA ALVES SANTOS",0,1,4,22,133,4,5,17,0,6],["JULIA ALVES SANTOS",1,0,4,22,133,4,5,17,0,6],["Raquel da Silva Lima",0,1,4,33,134,13,5,10,0,8],["RAFAELA DINOA DIAS",0,0,4,5,135,3,5,6,0,5],["Sara Herculano Dos Santos",0,0,4,6,31,3,5,6,0,5],["Rayssa Santos Da Silva",0,0,4,6,31,3,5,6,0,5],["MARIA JOSE DE OLIVEIRA SILVA",0,0,4,15,136,11,5,10,0,8],["FABIANA CLAUDINO DE MOURA SOUZA",0,0,4,14,32,10,5,12,0,10],["GESSICA DE VARGAS FLORES",0,1,4,12,137,8,5,10,0,8],["Jossana Kely Pequeno Menezes",0,1,4,12,22,8,5,10,0,8],["Larissa Rebeka Mendes Ramos",0,0,4,23,60,8,5,10,0,8],["Magdielma de Souza Lira",0,1,4,12,26,8,5,10,0,8],["EDVALDO MONTE GOMES",0,0,4,28,138,11,5,10,0,8],["Malcolm Santos Ferreira Couto",0,1,4,12,22,8,5,10,0,8],["ICARO ANCHIETA MOREIRA DE MELO",1,0,4,32,90,8,5,10,0,8],["Daniel Rodrigues Duarte",0,1,4,12,139,8,5,10,0,8],["Cibelly Paulino Alves",0,0,4,12,137,8,5,10,0,8],["GUSTAVO GONCALO JESUS DOS SANTOS",0,0,4,12,140,8,5,10,0,8],["Vanessa correia batista",0,1,4,12,141,8,5,10,0,8],["Raissa Barbosa Ferreira",0,1,4,4,7,2,5,5,0,5],["Kelyane Kelly Fortunato Barros",0,0,4,38,114,6,5,24,0,6],["Maria Clara Gonzaga de oliveira",0,0,4,4,7,2,5,5,0,5],["JOAO BATISTA DA SILVA FILHO",0,1,4,4,7,2,5,5,0,5],["Andrielly Fernandes de Andrade",0,1,4,4,27,2,5,5,0,5],["JULIA SILVA",0,0,4,6,31,3,5,6,0,5],["THAIS BARBOSA PEREIRA DOS SANTOS",0,1,4,6,31,3,5,6,0,5],["LETYCYA DA SILVA PONTES",0,1,4,6,31,3,5,6,0,5],["ALANY CARDOSO MEDEIROS DE ARAUJO",0,0,4,6,30,3,5,6,0,5],["SONIA CRISTINA ALVES DA SILVA",0,0,4,6,10,3,5,6,0,5],["DOUGLAS EUGENIO OLIVEIRA NUNES",0,0,4,6,10,3,5,6,0,5],["Anne Beatriz Silva Santos",0,0,4,6,30,3,5,6,0,5],["Hevelyane Abrantes Estrela",0,0,4,5,8,3,5,6,0,5],["MAYNNARA SANTOS DE FRANCA ROCHA",0,0,4,4,4,2,5,5,0,5],["Evelly Raylane Oliveira da Silva",0,0,4,6,142,3,5,6,0,5],["Evelyn Iane da Silva Brito",0,0,4,5,9,3,5,6,0,5],["Francisco Davi amancio soares",0,0,4,6,10,3,5,6,0,5],["Miguel Messias Silva de Lima",0,0,4,5,9,3,5,6,0,5],["Wesley Ferreira Teixeira",0,1,4,26,65,0,5,26,0,7],["Mikaelly Victoria Costa Santos",0,1,4,0,143,15,5,14,0,10],["Mikaelly Victoria Costa Santos",1,0,4,0,143,15,5,14,0,10],["Ericles carneiro da Silva",0,1,4,18,144,15,5,14,0,10],["Ericles carneiro da Silva",1,0,4,18,144,15,5,14,0,10],["Abraao Azevedo de Lima",0,1,4,14,32,10,5,12,0,10],["Caroline Felipe de Morais",0,1,4,18,145,15,5,14,0,10],["Caroline Felipe de Morais",1,0,4,18,145,15,5,14,0,10],["ARTUR LEONIDAS DE MEDEIROS NETO",0,0,4,25,57,8,5,10,0,8],["FELIPE HENRIQUE DOMINGO DE QUEIROZ",0,0,1,40,0,20,9,1,0,1],["Gabriel Henrique Viana de Lima",0,0,4,25,82,8,5,10,0,8],["VIVIANE VANDERLEI DE CARVALHO",0,0,4,23,58,8,5,10,0,8],["DRIELE CARDOSO ALMEIDA",0,0,4,41,146,21,10,27,0,12],["DRIELE CARDOSO ALMEIDA",1,0,4,41,146,21,10,27,0,12],["VITORIA CECILIA DE PAULA",0,1,4,22,131,4,5,17,0,6],["RUBIA CAROLINE VITORIA NASCIMENTO SANTOS",0,0,4,23,61,8,5,10,0,8],["ROSANGELA FELISBERTO DA SILVA",0,0,4,23,147,8,5,10,0,8],["ARTHUR KELLYSON PINHEIRO DE NEGREIROS",0,0,4,31,148,13,5,10,0,8],["IVANILSON ALVES FERREIRA DA SILVA",0,0,4,25,82,8,5,10,0,8],["Maria Clara Freitas da Silva",0,1,4,31,126,13,5,10,0,8],["Jayclesey Ketlly santos de Almeida",0,1,4,23,60,8,5,10,0,8],["Victorya francisca silva guilhen",0,0,4,33,101,13,5,10,0,8],["samuel martins gomes",0,0,4,42,149,22,10,27,0,12],["samuel martins gomes",1,0,4,42,149,22,10,27,0,12],["Rayane Maia dos santos",0,0,4,6,142,3,5,6,0,5],["Rayane Maia dos santos",1,0,4,6,142,3,5,6,0,5],["Maria iasmym bezerra silva",0,0,4,12,21,8,5,10,0,8],["CYANIRA DE FATIMA SOUSA OLIVEIRA",0,1,4,23,61,8,5,10,0,8],["IZAC GONZAGA DE FRANCA NETO",0,0,4,31,127,13,5,10,0,8],["ANTONIO CARLOS ROCHA NETO",0,0,4,31,148,13,5,10,0,8],["Arthur Lenine Ribeiro Cabral Ferreira Lima",0,0,4,23,60,8,5,10,0,8],["Julia Naiara da silva Mesquita",0,0,4,31,150,13,5,10,0,8],["Karollayne Mycaelly da Silva Oliveira",0,0,4,23,53,8,5,10,0,8],["LETICIA DE OLIVEIRA MONTEIRO",0,0,4,31,150,13,5,10,0,8],["Danily de Freitas ferreira",0,0,4,23,60,8,5,10,0,8],["CAUE BATISTA DE ARAUJO SANTANA",0,0,4,23,147,8,5,10,0,8],["THAIS YVE BARBOSA OLIVEIRA",0,0,4,12,151,8,5,10,0,8],["MARIA VITORIA VARELO DA SILVA",0,0,4,12,152,8,5,10,0,8],["MARIA RAILA DE FREITAS SILVA",0,0,4,12,151,8,5,10,0,8],["Samuel Bento da Silva Nascimento",0,0,4,12,141,8,5,10,0,8],["RAISSA LIVIA VIEIRA LIMA",0,0,4,12,153,8,5,10,0,8],["Samuel David Freitas da Costa",0,0,4,12,154,8,5,10,0,8],["Maria Eduarda Gomes",0,0,4,12,155,8,5,10,0,8],["LIGIA MARIA GOMES DE SOUZA",0,0,4,12,155,8,5,10,0,8],["ELIZABETH GONCALVES DE SOUSA",0,0,4,12,42,8,5,10,0,8],["Diego viana alves",0,1,4,15,29,11,5,10,0,8],["Joyce Hellen dos Santos Silva",0,1,4,23,58,8,5,10,0,8],["ISAAK LAURENTINO CARNEIRO DE LIMA E SILVA",0,1,4,32,108,8,11,28,0,8],["ISAAK LAURENTINO CARNEIRO DE LIMA E SILVA",1,1,4,32,108,8,11,28,0,8],["VITORIA XAYANE DA SILVA PEREIRA",0,0,4,7,69,4,5,20,0,6],["Aline Menezes Canizio",0,1,4,25,156,8,5,10,0,8],["GABRIEL MENDES DE ARAUJO LOURENCO",0,0,4,31,126,13,5,10,0,8],["Bruna Oliveira da Silva",0,0,4,12,157,8,5,10,0,8],["Ana Elyzabeth Pereira Mota",0,1,4,32,108,8,11,28,0,8],["Ana Elyzabeth Pereira Mota",1,1,4,32,108,8,11,28,0,8],["AGLAIDE ALLANE ARAUJO ALVES",0,0,4,12,155,8,5,10,0,8],["MARRY SUSANNE DA CONCEICAO",0,0,4,31,128,13,5,10,0,8],["JOSE EDUARDO SANTOS DO NASCIMENTO",0,0,4,7,78,4,5,22,0,6],["Camila Manuelle do Nascimento Souza",0,0,4,29,98,18,5,21,0,7],["Morganna Emanuelly Pereira",0,0,4,7,74,4,5,22,0,6],["GAEL JOSE FONSECA VALENTE",0,1,4,29,93,18,5,21,0,7],["ALBERTO DE SOUZA PEREIRA",0,0,4,7,68,4,5,7,0,6],["RITA DE CASSIA SOUZA MELO DEOLINDO",0,0,4,7,69,4,5,20,0,6],["Mateus Daniel Mariano Seabra",0,0,4,7,74,4,5,22,0,6],["VALDOMIRO ALTOMIR GONCALVES DE ARAUJO",0,0,4,7,69,4,5,20,0,6],["Gustavo Andrade da Costa",0,0,4,22,130,4,5,17,0,6],["Kellyany Vitoria Ferreira Morais",0,0,4,7,78,4,5,22,0,6],["MARLLON DA SILVA GADELHA",0,0,4,29,98,18,5,21,0,7],["Katia Karine Miranda Brito",0,2,4,29,93,18,5,21,0,7],["HELIANICIA ROUSE PEREIRA DA SILVA",0,0,4,29,93,18,5,21,0,7],["Andressa Santos Silva",0,1,4,29,99,18,5,21,0,7],["Rycson Williams Lima da Silva",0,1,4,29,99,18,5,21,0,7],["Ohana kethily marques lima",0,0,4,27,89,13,5,10,0,8],["Amarildo Silva Filho",0,0,4,29,72,18,5,21,0,7],["RAYANE BESERRA GOMES",0,0,4,29,72,18,5,21,0,7],["LEONARDO OLIVEIRA DA SILVA JUNIOR",0,0,4,29,80,18,5,21,0,7],["Yandra Hellen Mousinho Gomes",1,0,4,29,91,18,5,21,0,7],["Arthur Alisson Rodrigues da Silva",0,1,4,29,93,18,5,21,0,7],["Ana Clara Oliveira da Silva",0,0,4,29,94,18,5,21,0,7],["SUENIA PESSOA DA SILVA",0,0,4,29,72,18,5,21,0,7],["Kaio Ryan da Silva Pacheco",0,1,4,16,47,13,5,10,0,8],["Gabriella Cristina de Lima Silva",0,0,4,30,158,14,5,10,0,8],["DORIANDERSON DIAS SILVA",0,1,4,31,129,13,5,10,0,8],["Pedro Henrique Pereira Barbosa",0,0,4,31,129,13,5,10,0,8],["Anny Gabriela Oliveira Cruz da Silva",0,0,4,31,148,13,5,10,0,8],["Yasmim Tavares de Andrade",0,0,4,31,87,13,5,10,0,8],["Meirielly Rayanne Pereira da Cruz",0,0,4,31,129,13,5,10,0,8],["RAQUEL ALVES DE LIMA",0,0,4,31,87,13,5,10,0,8],["Wesley Fernandes Guedes Cabral",0,0,4,31,129,13,5,10,0,8],["Luna Victoria da Silva Reategui",0,0,4,31,87,13,5,10,0,8],["THALLYTON EDUARDO MOREIRA SILVA",0,0,4,31,87,13,5,10,0,8],["Brendolly Thyerre Oliveira Silva da Mota",0,2,4,31,85,13,5,10,0,8],["ANA PAULA BARBOSA PEREIRA",0,0,4,31,85,13,5,10,0,8],["NUBIA RAQUEL ONOFRE FELICIANO",0,0,4,16,36,13,5,10,0,8],["STEFFANI MARQUES DE LIMA SILVA",0,0,4,8,159,5,5,29,0,7],["Bianca Nascimento de andrade",0,0,4,8,159,5,5,29,0,7],["MALU BRAGA DE SOUSA",0,1,4,12,22,8,5,10,0,8],["Lidiane do Nascimento Gouveia",0,0,4,43,160,23,10,27,0,12],["Lidiane do Nascimento Gouveia",1,0,4,43,160,23,10,27,0,12],["Mikaely Kethleen Vital Barbosa",0,0,4,12,157,8,5,10,0,8],["Fabiany Kamily Andrade da Silva",0,1,4,29,91,18,5,21,0,7],["MARIA YSABELLE RODRIGUES GALINDO",0,0,4,29,96,18,5,21,0,7],["Maria Rita dos Santos Silva",0,0,4,29,72,18,5,21,0,7],["Hortensia Sousa Hernandez",0,0,4,29,93,18,5,21,0,7],["Rosilene Soares da Silva Filha",0,0,4,29,72,18,5,21,0,7],["EDIVANIA DE SOUSA PAES RODRIGUES",0,2,4,8,159,5,5,29,0,7],["Rebeca de oliveira lemos",0,0,4,29,97,18,5,21,0,7],["Bianca Maria Oliveira da Silva",0,1,4,44,161,18,5,30,0,7],["Bianca Maria Oliveira da Silva",1,0,4,44,161,18,5,30,0,7],["Anna Beatriz Santos de Carvalho",0,1,4,8,162,5,5,29,0,7],["CINTHIA BARBOSA ARAUJO",0,1,4,8,162,5,5,29,0,7],["Guilherme Candido Dornelas",0,0,4,12,152,8,5,10,0,8],["Everton Luis Lucindo da Silva",0,1,4,7,102,4,5,7,0,6],["Everton Luis Lucindo da Silva",1,0,4,7,102,4,5,7,0,6],["ALICE SOUSA ARAGAO",0,0,4,12,21,8,5,10,0,8],["ANTHONELLE ARAUJO DA SILVA",0,1,4,35,122,7,5,10,0,8],["Maria Julia Augusto de Oliveira",0,0,4,12,155,8,5,10,0,8],["Emilly Karoline Mendes Rodrigues",0,0,4,12,152,8,5,10,0,8],["JOAO THALYS FERREIRA DA SILVA",0,1,4,35,122,7,5,10,0,8],["NIVEA MILENA COSTA DO NASCIMENTO",0,1,4,35,121,7,5,10,0,8],["RAISSA SUELLEN FERREIRA DA SILVA MORAIS",1,0,4,32,90,8,5,10,0,8],["CAUA JORDANE LIMA DE AZEVEDO",0,1,4,35,105,7,5,10,0,8],["Maria Clara Morais Freitas Paiva",0,0,4,36,163,11,5,10,0,8],["matheus alves da silva",0,0,4,12,152,8,5,10,0,8],["lucas mauricio da silva",0,0,4,17,81,14,5,10,0,8],["Leticia Sales de Araujo",0,0,4,16,46,13,5,10,0,8],["Fellipe Santiago de Oliveira",0,1,4,36,163,11,5,10,0,8],["Bianca de Brito Melo",0,1,4,36,117,11,5,10,0,8],["Daniel Acelino Carlos",0,1,4,28,120,11,5,10,0,8],["ELIZAFA MELO DE OLIVEIRA",0,0,4,17,164,14,5,10,0,8],["ELIZAFA MELO DE OLIVEIRA",1,0,4,17,164,14,5,10,0,8],["Gabriel Vitor Rocha Gomes De Melo",0,0,4,16,165,13,5,10,0,8],["Rebeca Rodrigues de Pontes",0,1,4,36,117,11,5,10,0,8],["JULLYA GABRIELLA DA SILVA SOUZA",0,0,4,16,166,13,5,10,0,8],["ABIA EMANUELE ANDRADE DOS SANTOS",0,0,4,44,167,18,5,21,0,7],["Ericleyce Souza do Nascimento Pereira",0,0,4,8,162,5,5,29,0,7],["Aline Ulysses Cardoso",0,1,4,8,162,5,5,29,0,7],["Maria de Araujo Carneiro",0,0,4,8,168,5,5,31,0,7],["Nicole Moreno Trajano",0,0,4,8,169,5,5,8,0,7],["LETICIA ISABELLE NASCIMENTO DE OLIVEIRA COSTA",0,0,4,44,170,18,5,21,0,7],["MENDSON PEDRO RODRIGUES DA SILVA",1,1,4,45,171,24,5,32,0,7],["Gustavo de Brito Viana",0,1,4,45,171,24,5,32,0,7],["Gustavo de Brito Viana",1,0,4,45,171,24,5,32,0,7],["Dyane Silva da Costa",0,1,4,45,171,24,5,32,0,7],["Salete Maria Gouveia da Silva",0,0,4,22,172,4,5,17,0,6],["Maria Luiza Silva Cavalcante",0,0,4,16,106,13,5,10,0,8],["VITORIA BARBOSA DOS SANTOS",0,1,4,12,141,8,5,10,0,8],["Vitor Manoel Abreu Silva",0,0,4,16,173,13,5,10,0,8],["THIAGO JOSE ARAGAO TAVARES",0,1,4,17,44,14,5,10,0,8],["THIAGO JOSE ARAGAO TAVARES",1,0,4,17,44,14,5,10,0,8],["Luiz Roberto Correia de Carvalho Junior",0,1,4,17,44,14,5,10,0,8],["VERONICA ROCHA DIAS",0,0,4,16,103,13,5,10,0,8],["DENELTON CRISTHIAN SILVA AZEVEDO",0,0,4,25,174,8,5,10,0,8],["Camila de Oliveira Lima",0,0,4,16,175,13,5,10,0,8],["Yasmin beserra da Luz",0,2,4,17,84,14,5,10,0,8],["EDUARDA GOMES DOS SANTOS",0,0,4,16,165,13,5,10,0,8],["RITA DE CASSIA DE LIMA MEDEIROS",0,0,4,16,176,13,5,10,0,8],["Ana Isabelly da Silva Duarte",0,0,4,16,165,13,5,10,0,8],["LUMARA LAIS LUCENA DOS SANTOS",0,0,4,12,42,8,5,10,0,8],["RIVALUZIA LINHARES SILVA DIAS",1,1,4,31,177,13,5,10,0,8],["JAIRO LUIZ DE ARAUJO PEREIRA",0,0,4,31,178,13,5,10,0,8],["David Lucas Sarmento de Freitas",0,0,4,46,179,25,10,27,0,12],["Gabriel Sergio Nascimento da Silva",0,1,4,31,177,13,5,10,0,8],["Gabriel Sergio Nascimento da Silva",1,0,4,31,177,13,5,10,0,8],["Claudiane Gomes da Silva",0,0,4,46,180,25,10,27,0,12],["Claudiane Gomes da Silva",1,0,4,46,180,25,10,27,0,12],["HELENA CARVALHO DE FIGUEIREDO",0,0,4,19,48,16,5,15,0,5],["Samuel Eschenazi",0,0,4,36,107,11,5,10,0,8],["HYANECECILYA SABINO BARBOSA",0,0,4,10,16,7,5,10,0,8],["Guilherme Medeiros de Carvalho",0,0,4,15,116,11,5,10,0,8],["Anthony Gabriel da Costa Trigueiro",0,1,4,36,110,11,5,10,0,8],["JOAO GABRIEL BRITO DE LIMA",0,1,4,15,181,11,5,10,0,8],["Maria Adriana chaves do nascimento Rodrigues",0,0,4,4,6,2,5,5,0,5],["MILYANNE DINIZ FERREIRA",0,1,4,4,6,2,5,5,0,5],["ESTTER KEYLLA FRANCA DA COSTA",0,0,4,5,8,3,5,6,0,5],["Larissa Liana Silva de Andrade",0,1,4,6,31,3,5,6,0,5],["Kessio Gomes Sales Coutinho",0,1,4,5,11,3,5,6,0,5],["Kessio Gomes Sales Coutinho",1,1,4,5,11,3,5,6,0,5],["Felippe Batista do Nascimento",0,0,4,6,30,3,5,6,0,5],["ELYS MONIQUE SARINHO DOS SANTOS",0,0,4,36,107,11,5,10,0,8],["ADERLANIA DA SILVA CRUZ NUNES",0,1,4,28,182,11,5,10,0,8],["Larissa Maria do Nascimento Melo",0,1,4,28,182,11,5,10,0,8],["Jessica cirlene dos Santos Pereira",0,0,4,28,183,11,5,10,0,8],["KETILY VIRGINIA GOMES DA SILVA",0,1,4,36,110,11,5,10,0,8],["MARCONDES SIMAO DO NASCIMENTO JUNIOR",0,1,4,4,4,2,5,5,0,5],["Josekesia de souza Menezes",0,1,4,4,4,2,5,5,0,5],["JESSICA CRISTINE CAVALCANTI DAS NEVES",0,1,4,3,5,2,5,5,0,5],["Dayane Belarmino dias Costa",0,1,4,3,1,2,5,5,0,5],["LUCIANO HENRIQUE MARANHAO DE SOUZA",0,0,4,19,48,16,5,15,0,5],["Ana Gabriela Dal Sasso Ferreira",0,2,4,47,184,6,5,33,0,6],["Ricardo Rocha Barros Filho",0,0,4,44,185,18,5,21,0,7],["JOAO VICTOR SOUTO CAVALCANTI",0,0,4,28,186,11,5,10,0,8],["Ester Raquel Berto da Silva",0,0,4,28,187,11,5,10,0,8],["ANA BEATRIZ MARIA ALEXANDRE DE ARAUJO",0,0,4,8,168,5,5,31,0,7],["Vitoria Karine Nascimento dos Santos",0,0,4,44,185,18,5,21,0,7],["Esther Milena Rodrigues da Costa",0,0,4,23,61,8,5,10,0,8],["ABRAAO SANTOS DE ANDRADE GONZALEZ",0,1,4,8,159,5,5,29,0,7],["Maria Luiza Lopes de Medeiros",0,0,4,8,159,5,5,29,0,7],["Pedro Paulo Silva Do Livramento",0,1,4,8,162,5,5,29,0,7],["NATALIA GUEDES SOARES",0,1,4,8,159,5,5,29,0,7],["Maria Rita Rezende da Silva",0,0,6,0,0,0,12,34,0,13],["Danielli Batista de Almeida Machado",0,1,4,5,11,3,5,6,0,5],["Brenda Silva de Cavalcanti",0,0,4,28,186,11,5,10,0,8],["Ceila Zoraide Alves Diniz",0,0,4,8,159,5,5,29,0,7],["ISSAC GERVASIO DA SILVA",0,0,4,44,188,18,5,30,0,7],["Gleiciane do Nascimento Silva",0,0,4,28,76,11,5,10,0,8],["Mayara Karla Hardman de Lima",0,0,4,33,100,13,5,10,0,8],["PAULO ROBERTO FACIN JUNIOR",0,1,4,12,189,8,5,10,0,8],["Agnes Samyle Almeida da Costa",0,1,4,12,140,8,5,10,0,8],["Elizabeth Cristina de Souza Soares",0,0,4,12,190,8,5,10,0,8],["JOSE HAMON OLIVEIRA MAIA",0,1,4,32,108,8,11,28,0,8],["JOSE HAMON OLIVEIRA MAIA",1,1,4,32,108,8,11,28,0,8],["Maria Eduarda Espinhara Rodrigues",0,0,4,16,106,13,5,10,0,8],["RAFAELA ALVES ALCANTARA",0,0,4,16,166,13,5,10,0,8],["Heloysa Helena de Souza Natal",0,0,4,16,47,13,5,10,0,8],["FLAVIO ENRIQUE DOS SANTOS",0,0,4,16,165,13,5,10,0,8],["PAULO MARTINS EBRAHIM FIDELIS",0,0,4,8,191,5,5,31,0,7],["Julia Vitoria dos Santos Vieira",0,1,4,8,162,5,5,29,0,7],["JEAN KARLOS GOUVEIA JANUARIO",0,0,4,8,159,5,5,29,0,7],["Lucas Ferreira do Nascimento",0,1,4,8,169,5,5,8,0,7],["MARCO ANTONIO MOREIRA BARBOSA",0,0,4,8,159,5,5,29,0,7],["Israel Erike costa da Silva",0,1,4,44,167,18,5,30,0,7],["KALLINY DE SOUZA NUNES",0,2,4,44,192,18,5,21,0,7],["Andrea da cruz almeida",0,2,4,44,193,18,5,30,0,7],["Wenddel Quirino Pereira da Silva",0,0,4,44,170,18,5,21,0,7],["IURI JOSE LACERDA DA SILVA",0,1,4,44,193,18,5,30,0,7],["ANA JULIA MARIA ALEXANDRE DE ARAUJO",0,1,4,8,168,5,5,31,0,7],["Deyviane Dantas Rufino",0,1,4,8,159,5,5,29,0,7],["Isaias de lima lopes",0,0,4,8,168,5,5,31,0,7],["Samuel Moreira Marques",0,1,4,44,193,18,5,30,0,7],["DANIELA OLIVEIRA DOS SANTOS",0,0,4,44,170,18,5,21,0,7],["LETICIA MACIEL BARROCAS SILVA",0,1,4,44,188,18,5,30,0,7],["Maria Gabriela Gomes Pereira",0,0,4,44,185,18,5,21,0,7],["Maria Gabriela Gomes Pereira",1,0,4,44,185,18,5,21,0,7],["EMILY VITORIA BRITO SOARES",0,0,4,16,166,13,5,10,0,8],["Gabrielly Alves de Lima",0,0,4,16,109,13,5,10,0,8],["Maria Eduarda Galdino Quaresma",0,0,4,35,112,7,5,10,0,8],["EMMILLY VITORIA DOS SANTOS BATISTA",0,0,4,6,10,3,5,6,0,5],["EMMILLY VITORIA DOS SANTOS BATISTA",1,0,4,6,10,3,5,6,0,5],["ANDRE LUCAS NOGUEIRA CAMPOS",0,0,4,16,165,13,5,10,0,8],["Kauan Santos Maciel Diniz",0,0,4,16,36,13,5,10,0,8],["Gabriel Barbosa de Lucena",0,0,4,23,53,8,5,10,0,8],["Gerson Carlos dos Santos Nascimento",0,0,4,48,194,19,5,25,0,11],["Gerson Carlos dos Santos Nascimento",1,0,4,48,194,19,5,25,0,11],["LETICIA DA SILVA ROCHA",0,1,4,37,113,7,5,10,0,8],["LUANA KEYLA MARTINS ARRUDA",0,0,4,35,121,7,5,10,0,8],["LUANA KEYLA MARTINS ARRUDA",1,0,4,35,121,7,5,10,0,8],["JOSE EVANDRO FRANCA NUNES",0,1,4,16,175,13,5,10,0,8],["MARIA JULIA CABRAL BRUNO DE MOURA",0,2,4,44,167,18,5,21,0,7],["MARIA LUANA DA SILVA ARAUJO",0,1,4,8,159,5,5,29,0,7],["NAYARA BARBOSA SILVA",0,1,4,8,195,5,5,8,0,7],["ANGELES MARIANA GONZALES HERRERA",0,1,4,8,162,5,5,29,0,7],["Yasmim Morais De Araujo",0,1,4,44,185,18,5,21,0,7],["Yasmim Morais De Araujo",1,0,4,44,185,18,5,21,0,7],["Ana Beatriz Garcia Silva",0,0,4,16,103,13,5,10,0,8],["Paola Maria Souza Cruz",0,0,4,16,36,13,5,10,0,8],["Yuri Trajano Cristino",0,0,4,16,165,13,5,10,0,8],["AUDIANGELA DA SILVA CAETANO",0,1,4,8,162,5,5,29,0,7],["LUCAS DOS SANTOS SOARES",1,0,4,32,90,8,5,10,0,8],["ARTHUR VINICIUS DE SOUSA GUEDES",0,1,4,35,112,7,5,10,0,8],["Alexandro de Oliveira Aguiar Filho",0,1,0,0,35,12,7,13,0,0],["FRANCISCA MIRELLY GONCALVES APINAGES",0,1,4,8,159,5,5,29,0,7],["gabrielly marlene campos veloso",0,1,4,44,188,18,5,30,0,7],["GABRIEL DA SILVA FRANCA",0,1,4,8,162,5,5,29,0,7],["Ana Jussara Correia da Silva",0,1,4,8,159,5,5,29,0,7],["GUILHERME CESAR MELO DA SILVA",0,0,4,26,64,0,5,19,0,7],["geovanna virginia de Luna pontes",0,0,4,25,73,8,5,10,0,8],["JADY MIRELLI DE LIMA",0,1,4,11,20,8,5,10,0,8],["JUNIOR MARTINS DA SILVA",0,1,4,12,22,8,5,10,0,8],["Pedro Henrique Xavier Borges Souza",0,0,4,48,194,19,5,25,0,11],["Pedro Henrique Xavier Borges Souza",1,0,4,48,194,19,5,25,0,11],["Joyce Luana da Silva Farias",0,0,4,31,196,13,5,10,0,8],["MARIA ARIANE MONTEIRO DE BRITO",0,0,4,12,152,8,5,10,0,8],["Italo Cauan Rodrigues Marreiro",0,0,4,24,197,17,5,18,0,6],["Noemy Nicole de jesus Araujo Lima",0,0,4,24,198,17,5,18,0,6],["Maria Luiza Lima dos Santos",0,0,4,5,8,3,5,6,0,5],["Vivian Silva Costa",0,1,4,24,198,17,5,18,0,6],["JOAO FERNANDES MORAIS NETO",0,1,4,9,199,6,5,9,0,6],["Ingrid Queiroz Pinheiro",0,1,4,9,14,6,5,9,0,6],["DEBORA CRISTINA BANDEIRA DE LIMA TORRES",0,1,4,5,11,3,5,6,0,5],["Layssa Geovana Santos Ribeiro",0,0,4,5,135,3,5,6,0,5],["KELLVIN KAUNA PEREIRA GONCALVES",0,0,4,5,9,3,5,6,0,5],["Glaucia sonally da costa Nascimento",0,0,4,5,135,3,5,6,0,5],["Maria Manuela de Lima Silva",0,0,4,5,9,3,5,6,0,5],["Raisa Vicente Cordeiro",0,1,4,5,11,3,5,6,0,5],["Raisa Vicente Cordeiro",1,1,4,5,11,3,5,6,0,5],["Davi araujo dos Santos",0,1,4,38,114,6,5,24,0,6],["Lucas Bezerra da silva",0,1,4,9,14,6,5,9,0,6],["Kauan Pontes Morais",0,1,4,9,14,6,5,9,0,6],["MARIA EDUARDA DANTAS DA SILVA",0,1,4,9,56,6,5,9,0,6],["Samantha Ketlyn Bezerra Gomes",0,1,4,9,56,6,5,9,0,6],["JUDYMAR DA SILVA LUCENA JUNIOR",0,1,4,24,198,17,5,18,0,6],["Guilherme Sales do Nascimento",0,0,4,24,198,17,5,18,0,6],["Anderson Nascimento Martins",0,0,4,24,54,17,5,18,0,6],["NILSON FERREIRA GONCALVES",0,1,4,9,199,6,5,9,0,6],["Bruno Rafael Soares da Silva",0,1,4,16,47,13,5,10,0,8],["Maycon Douglas da Silva Marques",0,0,4,9,14,6,5,9,0,6],["ISADORA DOS SANTOS DA SILVA",0,0,4,24,198,17,5,18,0,6],["NADILLA CAMILA FELIPE GARCIA",0,1,4,24,54,17,5,18,0,6],["JOAO IVYS MEDEIROS DA SILVA",0,0,4,24,198,17,5,18,0,6],["MARIA CAROLINA RAMOS DIAS DA SILVA",0,1,4,9,56,6,5,9,0,6],["Lucas Carvalho Ribeiro",0,0,4,24,54,17,5,18,0,6],["Mikaelle aparecida ramos de Farias",0,0,4,24,197,17,5,18,0,6],["ANA JULIA DA NOBREGA SILVA",0,0,4,24,197,17,5,18,0,6],["Lunna Annkiare Souza da Silva",0,0,4,24,197,17,5,18,0,6],["ISMENIA ARAUJO BEZERRA DE MELO",0,0,4,24,198,17,5,18,0,6],["JOAO PEDRO DE CARVALHO RIBEIRO",0,1,4,9,14,6,5,9,0,6],["Thalyta Neves Marinho",0,0,4,24,198,17,5,18,0,6],["Luan Pontes da Costa Silva",0,0,4,24,198,17,5,18,0,6],["MILENA KELLY SANTOS PEQUENO",0,0,4,24,198,17,5,18,0,6],["Isabella Teodora de Freitas Pontes Macedo",0,0,4,24,198,17,5,18,0,6],["Maria Clara Belo Ribeiro CARVALHO",0,1,4,38,114,6,5,24,0,6],["Jefferson serafim de pontes",0,0,4,30,158,14,5,10,0,8],["Jefferson serafim de pontes",1,0,4,30,158,14,5,10,0,8],["Dhyonatam Silva do Nascimento",0,1,4,37,113,7,5,10,0,8],["Luis Guilherme bezerra da Costa",0,1,4,37,200,7,5,10,0,8],["Kaio Henrique Gomes da Silva",0,1,4,32,90,8,5,10,0,8],["Kaio Henrique Gomes da Silva",1,0,4,32,90,8,5,10,0,8],["Jhannefyr beatriz do nascimento Souza",0,1,4,35,122,7,5,10,0,8],["Hiago Luan Estrela e Silva",0,1,4,37,113,7,5,10,0,8],["Dimas Coelho Silva",0,1,4,37,113,7,5,10,0,8],["Bruno dos Santos Valerio",0,1,4,37,111,7,5,10,0,8],["Ana Paula de Barros Ventura",0,1,4,37,113,7,5,10,0,8],["ABRAAO LIMA AURELIANO DA SILVA",0,1,4,32,90,8,5,10,0,8],["ABRAAO LIMA AURELIANO DA SILVA",1,0,4,32,90,8,5,10,0,8],["JOSE CAUA KLAIWERT ASSIS DA SILVA",0,0,4,17,44,14,5,10,0,8],["JOSE CAUA KLAIWERT ASSIS DA SILVA",1,0,4,17,44,14,5,10,0,8],["Thays Brito De Sena",0,0,4,25,73,8,5,10,0,8],["Ramon Veloso Silva",0,0,4,0,0,14,13,10,0,8],["Ramon Veloso Silva",1,0,4,0,0,14,13,10,0,8],["LIA FLOR CARDOSO DA SILVA",0,0,0,49,201,26,14,0,0,0],["LIA FLOR CARDOSO DA SILVA",1,0,0,49,201,26,14,0,0,0],["GEORGINA VITORIA SOARES ALCANTARA",0,1,0,0,35,12,7,13,0,0],["CAROLINNE CORDEIRO MONTEIRO",0,0,4,17,164,14,5,10,0,8],["Luan Pessoa Lucas",0,1,4,10,15,7,5,10,0,8],["Yves McNamara Fagundes",0,0,4,35,112,7,5,10,0,8],["Isabela Cristina Cordeiro",0,1,4,28,182,11,5,10,0,8],["LEONARDO GIUSEPPE JUSSELINO DE FREITAS SILVA",0,0,4,28,183,11,5,10,0,8],["ISABELA BRUNA DE LIMA MARQUES",0,0,4,28,187,11,5,10,0,8],["MARIA LUISA BARBOSA DE ARAUJO",0,0,4,28,76,11,5,10,0,8],["Franssyneide Pereira Martins da Silva",0,0,4,16,166,13,5,10,0,8],["Adrian Gabriel Bernardino Lima",0,0,4,16,0,13,15,10,0,8],["Adrian Gabriel Bernardino Lima",1,0,4,16,0,13,15,10,0,8],["Shirley Francy Soares de Lima",0,1,4,22,52,4,5,17,0,6],["EUDES FERREIRA DE FARIAS",0,1,4,21,50,6,5,16,0,6],["Layssa Kelly Souza do Nascimento",0,1,4,19,202,16,5,15,0,5],["JOSE CARLOS DA SILVA JUNIOR",0,1,4,19,203,16,5,15,0,5],["Matheus Henrique Maciel Targino",0,0,4,8,79,5,5,8,0,7],["Sarah Thiemy Lopes Takahashi",0,0,4,50,204,27,5,35,0,11],["Sarah Thiemy Lopes Takahashi",1,0,4,50,204,27,5,35,0,11],["Leslie Mickaele dos Santos Sousa",0,1,4,21,50,6,5,16,0,6],["Jaqueline Marques de Brito",0,1,4,21,0,6,15,16,0,6],["Jaqueline Marques de Brito",1,0,4,21,0,6,15,16,0,6],["ALAN DALTO MORAES DA SILVEIRA",1,0,4,44,192,18,5,21,0,7],["JOAO PAULO GOMES CORREIA",0,1,4,22,131,4,5,17,0,6],["Jonnatha Melo dos Santos",0,1,4,22,131,4,5,17,0,6],["Jonnatha Melo dos Santos",1,1,4,22,131,4,5,17,0,6],["Maria Eliane Santos Soares",0,1,4,38,114,6,5,24,0,6],["MARIA DO CARMO MARQUES DE LIMA",0,1,4,24,205,17,5,18,0,6],["Gabriele Rayssa Monte da Silva",0,1,4,22,130,4,5,17,0,6],["JOAO VICTOR PEREIRA DA SILVA",0,1,4,24,54,17,5,18,0,6],["JOAO VICTOR PEREIRA DA SILVA",1,0,4,24,54,17,5,18,0,6],["CYBELE BRANDAO SANTOS",0,1,4,21,50,6,5,16,0,6],["Daiane Pereira bernardino",0,1,4,21,55,6,5,16,0,6],["ANDREA GLORIA LEAL DE OLIVEIRA",0,1,4,21,51,6,5,16,0,6],["Thatiane Rayssa do Nascimento Silva",0,1,4,9,56,6,5,9,0,6],["Stefanie Melo souza",0,1,4,9,56,6,5,9,0,6],["MARCUS COSTA GONCALVES DA SILVA",0,1,4,24,198,17,5,18,0,6],["AMANDA CRISTINE SILVA CHAVES",0,1,4,22,52,4,5,17,0,6],["EDSON BRUNO DE SOUZA COELHO",0,0,0,51,206,26,16,13,0,0],["JULIO CESAR PEREIRA DE FREITAS FILHO",0,0,4,28,75,11,5,10,0,8],["GEFFERSON JERONIMO ARAUJO",0,0,4,6,10,3,5,6,0,5],["GEFFERSON JERONIMO ARAUJO",1,0,4,6,10,3,5,6,0,5],["Kenia Gomes Da Silva",0,0,4,30,158,14,5,10,0,8],["Jennifer Santos da Silva",0,0,4,22,131,4,5,17,0,6],["WILEMBERG GONCALVES GUERRA",0,1,4,22,131,4,5,17,0,6],["JULIE ANNY SOARES CARVALHO",0,1,4,22,52,4,5,17,0,6],["Bianca Ferreira Sobral",0,1,4,22,133,4,5,17,0,6],["Anna Clara Vilela Nascimento Da Silva",0,0,4,8,13,5,5,8,0,7],["THIAGO LIMA DA SILVA",0,0,4,8,169,5,5,8,0,7],["Viviane Oliveira Costa",0,0,4,8,162,5,5,29,0,7],["TIAGO LOPES DA SILVA",0,0,4,23,61,8,5,10,0,8],["Denise Souza Pereira",0,1,4,36,163,11,5,10,0,8],["NICOLAS COELHO SILVA",0,1,4,36,163,11,5,10,0,8],["ROBSON VIEIRA DE ARAUJO",0,1,4,11,207,8,5,10,0,8],["Rafaella Paloma Oliveira da Silva",0,0,4,52,208,21,10,27,0,12],["ALLAN KENNEDY DO NASCIMENTO APOLINARIO",0,0,4,23,60,8,5,10,0,8],["Arnaldo Galdino dos Santos Neto",0,0,4,23,60,8,5,10,0,8],["FABIO NICOLAS SILVA",0,0,4,52,209,21,10,27,0,12],["FABIO NICOLAS SILVA",1,0,4,52,209,21,10,27,0,12],["Murilo Messi da Silva Rodrigues",0,0,4,4,210,2,17,5,0,5],["ALLAYS ROSILENE DOS SANTOS BISPO",0,0,4,19,203,16,17,15,0,5],["Maria fabricia Oliveira calixto",0,0,4,19,203,16,17,15,0,5],["Juliana Batista dos Santos Cruz",0,0,4,12,141,8,5,10,0,8],["Milenny Beatriz de Lima Silva",0,1,4,36,211,11,5,10,0,8],["Daniel Souza de Queiroz",0,1,4,36,211,11,5,10,0,8],["YASMIN COSTA DA SILVA",0,1,4,36,115,11,5,10,0,8],["ANGELICA DE CARVALHO DA SILVA FONTES",0,0,4,28,183,11,5,10,0,8],["Luciana Oliveira dos Santos de Lima",0,1,4,36,107,11,5,10,0,8],["Francisco Cleber da Silva",0,1,4,36,163,11,5,10,0,8],["Fabiano Diniz da Silva",0,1,4,36,115,11,5,10,0,8],["MARIA THAYS DE MELO ARAUJO",0,0,4,36,211,11,5,10,0,8],["Andressa Morais Pereira",0,1,4,36,117,11,5,10,0,8],["Rute Hellen Ferreira Chianca",0,1,4,9,14,6,5,9,0,6],["ANA BEATRIZ SOARES DOS SANTOS",0,0,4,53,212,28,5,36,0,10],["Natasha Tafila Frazao da Nobrega",0,0,4,28,75,11,5,10,0,8],["ANA LUIZA DE BRITO BANDEIRA",1,0,4,32,213,8,5,10,0,8],["Julia Melo Amorim",0,0,4,12,137,8,5,10,0,8],["Cesar Augusto Barreto Gondim",0,1,4,32,214,8,11,28,0,8],["Cesar Augusto Barreto Gondim",1,1,4,32,214,8,11,28,0,8],["ANA VITORIA BARBOSA DOS SANTOS",1,0,4,32,213,8,5,10,0,8],["Thays teodozio de melo",0,0,4,11,37,8,5,10,0,8],["bruno henrique da silva moura",0,0,4,12,157,8,5,10,0,8],["Diogo Eduardo da Silva",1,0,4,32,213,8,5,10,0,8],["ELIDA RAIANE DOS SANTOS COSTA",0,1,4,7,68,4,5,7,0,6],["VITORIA IRIS DE ARAUJO HERNANDEZ",0,0,4,12,137,8,5,10,0,8],["ROBERTA KELEN FELIX DA SILVA",0,1,4,12,137,8,5,10,0,8],["VERONICA VITORIA MARQUES DA SILVA",0,0,4,11,17,8,5,10,0,8],["Lucas Wellington de Oliveira",0,1,4,12,21,8,5,10,0,8],["Luan Ferreira De Araujo",0,0,4,11,41,8,5,10,0,8],["Douglas Rayan Daltro Souza",0,0,4,11,24,8,5,10,0,8],["Bruno Henrique Cavalcanti do Nascimento",0,1,4,12,139,8,5,10,0,8],["ERICLIS EDUARDO GOMES DOS SANTOS",0,0,4,12,22,8,5,10,0,8],["Renato Hilquias Guedes Soares",0,0,4,32,90,8,5,10,0,8],["Renato Hilquias Guedes Soares",1,0,4,32,90,8,5,10,0,8],["SAMUEL SOARES HORTENCIO",0,0,4,32,213,8,5,10,0,8],["THAYSSA RODRIGUES DA SILVA MENDONCA",0,0,4,15,136,11,5,10,0,8],["AYKORAN THIAGO FERNADES DE OLIVIRA DO NASCIMENTO FILHO",0,1,4,38,215,6,5,37,0,6],["GABRIEL NOBERTO DE MACENA",0,1,4,24,205,17,5,18,0,6],["GABRIEL NOBERTO DE MACENA",1,1,4,24,205,17,5,18,0,6],["Jonatas Gabriel Rodrigues de Carvalho",0,1,4,44,216,18,5,38,0,7],["RAUNI DA COSTA XAVIER PINTO",0,1,4,38,217,6,5,37,0,6],["RAISSA MAYARA TOCA DA SILVA",0,0,4,47,218,6,5,33,0,6],["RUAN DO NASCIMNETO DA SILVA",0,0,4,47,218,6,5,33,0,6],["REBECA THALITA TRAJANO DA SILVA",0,0,4,30,219,14,5,10,0,8],["Samuel Pedro Bertoldo ferreira",0,0,4,54,220,25,10,27,0,12],["Samuel Pedro Bertoldo ferreira",1,0,4,54,220,25,10,27,0,12],["LUIS DAVI SILVA MENDES",0,1,4,25,82,8,5,10,0,8],["LEONA LETICIA DE SOUTO FREIRE",0,2,4,12,155,8,5,10,0,8],["Petrick Rodrigues",0,0,4,12,141,8,5,10,0,8],["Paulo Antero Ribeiro Neto",0,0,4,28,138,11,5,10,0,8],["MARIANA BEATRIZ FELIX DA SILVA",0,0,4,48,221,19,5,25,0,11],["MARIANA BEATRIZ FELIX DA SILVA",1,0,4,48,221,19,5,25,0,11],["Claudio Yuri da Silva Nascimento",0,0,4,12,157,8,5,10,0,8],["PEDRO HENRIQUE RAMOS PESSOA",0,0,4,30,222,14,5,10,0,8],["PEDRO HENRIQUE RAMOS PESSOA",1,0,4,30,222,14,5,10,0,8],["MARIA LUISA DA SILVA TORRES",0,0,4,28,120,11,5,10,0,8],["Nycollas Marques do Nascimento",0,1,4,36,125,11,5,10,0,8],["RONNYE SILVA SANTOS",0,1,4,28,138,11,5,10,0,8],["DEBORA KALINE ROCHA DA SILVA",0,1,4,32,214,8,5,10,0,8],["JOAO VICTOR AUGUSTO DA SILVA",0,1,4,28,223,11,5,10,0,8],["Evellyn Mayara Silva Onofre",0,0,4,28,186,11,5,10,0,8],["Evellyn Mayara Silva Onofre",1,0,4,28,186,11,5,10,0,8],["RAFAEL FERREIRA CABRAL DE MELLO",0,1,4,23,53,8,5,10,0,8],["Andressa Monalisa dos Santos Silva",0,0,4,11,24,8,5,10,0,8],["MARIA LUIZA SIMPLICIO DE MEDEIROS",0,1,4,11,18,8,5,10,0,8],["PAULA DANUBIA DE ALMEIDA SILVA",0,1,4,12,139,8,5,10,0,8],["Carollayne Fernandes da Silva",0,0,4,11,34,8,5,10,0,8],["Lucas Samuel Pereira da Silva",0,0,4,12,224,8,5,10,0,8],["ANA CAROLINA SANTOS",0,1,4,12,19,8,5,10,0,8],["ANA CAROLINA SANTOS",1,0,4,12,19,8,5,10,0,8],["Gabriel da Fonseca lima silva",0,1,4,11,18,8,5,10,0,8],["Viviane Andrade da Silva",0,1,4,24,205,17,5,18,0,6],["JOAO MARCOS DA ROCHA SILVA",0,1,4,32,225,8,11,28,0,8],["JOAO MARCOS DA ROCHA SILVA",1,1,4,32,225,8,11,28,0,8],["Dayanne lohanne alves da silva",0,0,4,11,23,8,5,10,0,8],["ERLANDIA NASCIMENTO ROCHA",0,0,4,11,24,8,5,10,0,8],["MARIA EDUARDA LINO DA SILVA",0,0,4,11,20,8,5,10,0,8],["BRUNO ANTONIO SOARES DE ALMEIDA",0,0,4,11,23,8,5,10,0,8],["Bruno Alves de Freitas Leite",0,1,4,11,207,8,5,10,0,8],["KALINE VITORIA MIRANDA SOARES",0,0,4,16,36,13,5,10,0,8],["Vanessa Marinho dos Santos",0,0,4,11,226,8,5,10,0,8],["VICTOR RAPHAEL SILVA E SOUZA NUNES",0,0,4,11,34,8,5,10,0,8],["MARIANNY KELLY DA SILVA DIAS",0,0,4,11,37,8,5,10,0,8],["Nicole Araujo da Silva",0,1,4,32,225,8,11,28,0,8],["Nicole Araujo da Silva",1,1,4,32,225,8,11,28,0,8],["Jasmilly Mikaela Nascimento Deolindo",0,1,4,12,139,8,5,10,0,8],["JUAN DE SOUSA NASCIMENTO",0,0,4,11,34,8,5,10,0,8],["INGLITTY GONCALVES FERREIRA",0,1,4,11,20,8,5,10,0,8],["Heryk da silva correia",0,0,4,11,18,8,5,10,0,8],["Artur Dutra De Oliveira",0,1,4,12,42,8,5,10,0,8],["GRAZIELA MARIA DE ARAUJO PEREIRA",0,0,4,11,34,8,5,10,0,8],["ANTONIO LUCAS DA SILVA LUCENA",0,1,4,32,108,8,11,28,0,8],["ANTONIO LUCAS DA SILVA LUCENA",1,1,4,32,108,8,11,28,0,8],["CLARA MARANHAO SANTOS",0,0,4,11,23,8,5,10,0,8],["Gabriel Alencar Dantas",0,1,4,12,0,8,15,10,0,8],["Gabriel Alencar Dantas",1,0,4,12,0,8,15,10,0,8],["Juliana Nunes da Rocha",0,1,4,11,207,8,5,10,0,8],["Erika Raquiele Maia Moreira",1,0,4,30,219,14,5,10,0,8],["Nelma Souza Leite",0,0,4,18,144,15,5,14,0,10],["Beatriz Kelly Leite Peixoto",0,0,4,16,166,13,5,10,0,8],["Davi da Silva Costa",0,1,4,16,109,13,5,10,0,8],["Joaquim Francisco de Sousa Filho",0,0,4,30,227,14,5,10,0,8],["Joaquim Francisco de Sousa Filho",1,0,4,30,227,14,5,10,0,8],["GRAZIELLY BEATRIZ DE SOUZA MIGUEL",0,0,4,17,81,14,5,10,0,8],["Maria Clara Fernandes Barbosa",0,0,4,29,99,18,5,21,0,7],["Breno Fernando Silva",0,1,4,26,64,0,5,19,0,7],["Maria Clara Ribeiro De Souza",0,0,4,29,98,18,5,21,0,7],["ANTONIO ALIPIO PEREIRA DA SILVA",0,1,4,29,72,18,5,21,0,7],["Daniele Felix da Silva",0,2,4,29,99,18,5,21,0,7],["POLYANNA VITORIA GALVAO DE MEDEIROS",0,1,4,0,228,15,5,14,0,10],["POLYANNA VITORIA GALVAO DE MEDEIROS",1,1,4,0,228,15,5,14,0,10],["DEBORA CRISTINA MORAES DE LIRA",0,0,4,29,72,18,5,21,0,7],["DEBORA CRISTINA MORAES DE LIRA",1,0,4,29,72,18,5,21,0,7],["Pedro Miguel da Silva Flor",0,0,4,29,98,18,5,21,0,7],["EMILY RAMIRA ARAUJO DOS SANTOS",0,0,4,29,99,18,5,21,0,7],["Beatriz Luna do Nascimento",0,0,4,29,91,18,5,21,0,7],["JULIANE CARLA DOS SANTOS SILVA",0,0,4,55,229,25,10,27,0,12],["JULIANE CARLA DOS SANTOS SILVA",1,0,4,55,229,25,10,27,0,12],["Everton Costa de Santana",0,0,4,30,222,14,5,10,0,8],["Everton Costa de Santana",1,0,4,30,222,14,5,10,0,8],["PAMELA ANDRESSA GONCALVES FERREIRA",1,0,4,30,219,14,5,10,0,8],["Rauanda Fernandes de Oliveira",0,1,4,7,69,4,5,20,0,6],["WALDILEA TELLINI DE OLIVEIRA",0,1,4,38,230,6,5,24,0,6],["Bruno Feliphe da Silva Brandao",0,1,4,22,130,4,5,17,0,6],["JOSE ELISSON LIBERATO TAVARES SILVA",0,1,4,29,95,18,5,21,0,7],["Jacksiel Vinicio de souza",0,0,4,8,169,5,17,8,0,7],["Nicolly Fernandes Cruz",0,1,4,22,130,4,5,17,0,6],["PAMELA JARDY GOMES BEZERRA DA SILVA",0,1,4,22,133,4,5,17,0,6],["ANDRE RENATO LAURIA MARTINS",0,0,4,38,231,6,5,24,0,6],["MARIANA MEDEIROS E SILVA",0,1,4,22,131,4,5,17,0,6],["MARIANA MEDEIROS E SILVA",1,0,4,22,131,4,5,17,0,6],["JOAO LUCAS FERREIRA DE OLIVEIRA",0,0,4,8,169,5,17,8,0,7],["Thalysson Lorran da Silva",0,1,4,8,169,5,17,8,0,7],["Maria Letycia Cosmo de Souza",0,0,4,22,130,4,5,17,0,6],["Maria Letycia Cosmo de Souza",1,0,4,22,130,4,5,17,0,6],["Andrielly De Sousa Oliveira",0,0,4,8,13,5,17,8,0,7],["Francisco Vicente Muniz Neto",0,0,4,8,195,5,17,8,0,7],["Fernando Henrique Vieira Monteiro",0,0,4,3,1,2,17,5,0,5],["Noemy Ferreira Dos Santos",0,1,4,3,3,2,17,5,0,5],["Luana Maria Pessoa Maia",0,0,4,7,69,4,17,20,0,6],["Evellyn Fernanda vicente Pereira",0,0,4,8,169,5,17,8,0,7],["Anna Rebeka da Cruz Farias Lima",0,0,4,8,79,5,17,8,0,7],["ANDRE LUIZ MENDES OLIVEIRA",0,1,4,34,232,19,8,23,0,11],["ANDRE LUIZ MENDES OLIVEIRA",1,0,4,34,232,19,8,23,0,11],["Alane Gomes Cavalcante",0,0,4,12,154,8,5,10,0,8],["JADSOM FERNANDES RODRIGUES",0,1,4,32,233,8,11,28,0,8],["JADSOM FERNANDES RODRIGUES",1,0,4,32,233,8,11,28,0,8],["VANDA KAROLINY FELIPE GONCALVES",0,1,4,12,141,8,5,10,0,8],["IARA EMILIA CABRAL GUEDES",0,1,4,35,123,7,5,10,0,8],["HELOISA KYSSYA DA SILVA NASCIMENTO",0,0,4,20,234,15,5,14,0,10],["ANDREIA GOUVEA FERREIRA",0,0,4,39,124,19,5,25,0,11],["ANDREIA GOUVEA FERREIRA",1,0,4,39,124,19,5,25,0,11],["MAYRA NATHANI COELHO PEREIRA",0,0,4,20,234,15,5,14,0,10],["Mirian barreto dos Santos",0,1,4,56,235,29,5,39,0,14],["EVELLYN VITORIA SOBRAL SALDANHA",1,1,4,39,124,19,5,25,0,11],["LUIS FILIPE MATIAS BRAGA",0,1,4,56,236,29,5,39,0,14],["Sara Dandara de Andrade Lima",0,1,4,56,236,29,5,39,0,14],["KLEBER CARVALHO DE LIMA",0,0,4,20,49,15,5,14,0,10],["Alessandra Bernardino da Silva",0,1,4,56,237,29,5,39,0,14],["Paolla Yasmin Vital Silva",0,0,4,20,238,15,5,14,0,10],["KAROLAYNE ELIAS DOS SANTOS",0,0,4,20,239,15,5,14,0,10],["Alan Gomes de Araujo",0,1,4,20,0,15,15,14,0,10],["Alan Gomes de Araujo",1,1,4,20,0,15,15,14,0,10],["ALLANA RAYSSA DE ALCANTARA LINS",1,1,4,39,124,19,5,25,0,11],["Maria Clara Almeida Silva",0,1,4,20,234,15,5,14,0,10],["Jessica Allany Abrantes dos Santos",0,1,4,56,236,29,5,39,0,14],["Jessica Allany Abrantes dos Santos",1,0,4,56,236,29,5,39,0,14],["DANIELA SILVA DA COSTA",0,0,4,56,237,29,5,39,0,14],["ADEMIR REGIS DA SILVA SEGUNDO",0,1,4,56,237,29,5,39,0,14],["Mikael Lucas Ferreira Gomes de Oliveira",1,0,4,20,49,15,5,14,0,10],["YURI SAMUEL FRANCA DOS SANTOS",0,0,4,20,240,15,5,14,0,10],["Wellington dos Santos Targino",0,1,4,56,236,29,5,39,0,14],["MAYCON LIMA DANTAS",0,1,4,56,236,29,5,39,0,14],["HELEN LEAL DE OLIVEIRA",0,0,4,20,240,15,5,14,0,10],["RENATA MARIA DA SILVA",0,0,4,20,234,15,5,14,0,10],["DANIELLE CORREA FERREIRA",0,1,4,56,235,29,5,39,0,14],["LIVIA ARANHA DA SILVA",0,1,4,56,236,29,5,39,0,14],["Jully do Nascimento Oliveira",0,1,4,56,236,29,5,39,0,14],["Yuri avelino fideles",0,0,4,0,241,15,5,14,0,10],["Elias alves costa",0,0,4,20,240,15,5,14,0,10],["Jhonata Bezerra Felix",0,1,4,39,124,19,5,25,0,11],["Jhonata Bezerra Felix",1,0,4,39,124,19,5,25,0,11],["Maria Clara Lima do nascimento",0,0,4,20,239,15,5,14,0,10],["CLEYSON CLEBIO PESSOA LIMA",0,0,4,20,234,15,5,14,0,10],["ELENICE GONCALVES DE LIMA",0,1,4,39,124,19,5,25,0,11],["ELENICE GONCALVES DE LIMA",1,0,4,39,124,19,5,25,0,11],["DERICK CAVALCANTI DE SOUZA",1,1,4,18,242,15,5,14,0,10],["ERIKA GOMES DA SILVA",0,1,4,56,236,29,5,39,0,14],["Jonas Freire Monteiro",1,0,4,18,144,15,5,14,0,10],["MIBIO BARBOSA DE CARVALHO",0,0,4,20,240,15,5,14,0,10],["ANA PAULA VANDERLEI DA SILVA LIMA",0,1,4,56,235,29,5,39,0,14],["Ana Beatriz silva do Nascimento",0,0,4,20,234,15,5,14,0,10],["VITORIA GONCALVES FERREIRA",0,0,4,20,239,15,5,14,0,10],["Yeannybeth Carolina paisan millan",0,1,4,56,235,29,5,39,0,14],["GABRYELE RAYANI DA SILVA SANTOS",0,1,4,56,237,29,5,39,0,14],["Alannay lucia leopoldino pessoa",1,0,1,57,0,30,18,1,0,1],["JOAO CARLOS RIBEIRO COUTINHO DE MORAIS",0,1,4,34,232,19,8,23,0,11],["JOAO CARLOS RIBEIRO COUTINHO DE MORAIS",1,0,4,34,232,19,8,23,0,11],["Williana Fernandes dos Santos",0,0,4,56,236,29,5,39,0,14],["Melissa Darla Bernardelli Costa",0,0,4,35,121,7,5,10,0,8],["JULIA CRISTINA RODRIGUES DE ARAUJO",0,0,4,37,200,7,5,10,0,8],["SILAS DOS SANTOS FERREIRA",0,2,4,12,153,8,5,10,0,8],["Maria Luiza Feitosa Dos Santos",1,1,4,32,233,8,11,28,0,8],["FRANCISCO BEZERRA GOMES JUNIOR",0,0,4,7,66,4,5,7,0,6],["Samuel Alves da Silva",1,0,4,31,85,13,5,10,0,8],["Isaque Maia Campos",0,0,4,30,222,14,5,10,0,8],["Isaque Maia Campos",1,0,4,30,222,14,5,10,0,8],["Igor Medeiros de Lucena",1,1,4,48,221,19,5,25,0,11],["Stainy Santos da Silva",0,0,4,32,90,8,5,10,0,8],["Stainy Santos da Silva",1,0,4,32,90,8,5,10,0,8],["Thallysson Alexandre jose dos santos carneiro",0,1,4,16,47,13,5,10,0,8],["Thallysson Alexandre jose dos santos carneiro",1,1,4,16,47,13,5,10,0,8],["ANA VITORIA MUNIZ DA SILVA",0,0,4,7,12,4,5,7,0,6],["Nikcoly Martins de Freitas",1,0,4,55,243,25,10,27,0,12],["NYUA CARDOSO ALVES DE MEDEIROS",0,0,4,31,126,13,5,10,0,8],["MICHELLE WANESSA BORGES DA CONCEICAO",1,0,4,48,244,19,5,25,0,11],["Jonas Araujo de Farias",0,1,4,16,47,13,5,10,0,8],["Jonas Araujo de Farias",1,1,4,16,47,13,5,10,0,8],["Jhonatan Carlos Ferreira Carneiro",0,0,4,16,36,13,5,10,0,8],["Jhonatan Carlos Ferreira Carneiro",1,0,4,16,36,13,5,10,0,8],["Sabrina ellen luna mangueira",1,1,4,32,108,8,11,28,0,8],["ERISSON NOBREGA MACEDO JUNIOR",0,0,4,16,109,13,5,10,0,8],["Filipi Fernandes da Silva",0,1,4,28,71,11,5,10,0,8],["MATHEUS PEDRO ANTONIO SANTOS LIMA",0,0,4,28,223,11,5,10,0,8],["Willian Alves De Souza Silva",1,1,4,36,0,11,15,10,0,8],["GRACE ELLEN LEMOS SILVA DOS SANTOS PEREIRA",0,1,4,29,97,18,5,21,0,7],["Maria Clara Faustino monteiro",0,0,4,16,106,13,5,10,0,8],["Bladson Bruno DA Silva Pereira",1,0,4,30,77,14,5,10,0,8],["Maria Eduarda de Oliveira Coutinho",0,0,4,11,41,8,5,10,0,8],["Izabelly vitoria Brito da Silva",0,0,4,11,17,8,5,10,0,8],["LIGIA CORDEIRO PACHECO DA ROSA",0,1,4,12,22,8,5,10,0,8],["LYDIA BRONDY GOMES BERNARDO DA SILVA",0,0,4,11,24,8,5,10,0,8],["KAUÃ ALCANTARA DA SILVA",0,0,4,12,152,8,5,10,0,8],["ana luisa dos santos almeida",0,0,4,11,23,8,5,10,0,8],["Schayana graziella da rosa",1,1,4,32,225,8,11,28,0,8],["IGOR TEIXEIRA DE ALCANTARA",0,0,4,30,222,14,5,10,0,8],["IGOR TEIXEIRA DE ALCANTARA",1,0,4,30,222,14,5,10,0,8],["Maria Rafaela Pereira de Oliveira",1,0,4,30,222,14,5,10,0,8],["Andrielly da Costa Firmino",1,0,4,30,77,14,5,10,0,8],["Amiris da Silva Ferreira",1,1,4,58,245,31,5,40,0,15],["Laura Karinne Almeida da Costa",1,1,4,4,45,2,5,5,0,5],["Gessica oliveira dos santos",1,1,4,4,45,2,5,5,0,5],["WILLIAM LIMA FERREIRA DE SOUSA",1,0,4,59,246,32,11,41,0,8],["Thaynara Sales De Souza",0,1,4,8,159,5,5,29,0,7],["PRISCILA RAMOS SIMPES PIRES",0,0,4,44,188,18,5,30,0,7],["LETICIA BRUNA BRASILEIRO TOMAZ DE SA",0,0,4,29,80,18,5,21,0,7],["Fabricio da costa fernandes",0,0,4,44,188,18,5,30,0,7],["Ana Jacqueline da Silva Batista",0,1,4,44,188,18,5,30,0,7],["Thiago Braga Dantas de Oliveira",0,0,4,44,193,18,5,30,0,7],["Thiago Braga Dantas de Oliveira",1,0,4,44,193,18,5,30,0,7],["MARIA DE FATIMA COSMO NASCIMENTO",0,0,4,44,188,18,5,30,0,7],["MARIA DE FATIMA COSMO NASCIMENTO",1,0,4,44,188,18,5,30,0,7],["Naiany Feitosa Laurentino",0,0,4,44,161,18,5,30,0,7],["MILENY FERREIRA NASCIMENTO DE PONTES",0,1,4,44,161,18,5,30,0,7],["Nikole rosa da silva",0,1,4,44,161,18,5,30,0,7],["ALESSANDRA FAUSTINO DE ARAUJO",0,0,4,6,31,3,5,6,0,5],["ALESSANDRA FAUSTINO DE ARAUJO",1,0,4,6,31,3,5,6,0,5],["Cauan gentil da silva medeiros",0,0,4,0,0,18,13,21,0,7],["Cauan gentil da silva medeiros",1,0,4,0,0,18,13,21,0,7],["Douglas da Silva Santos",0,0,4,29,72,18,5,21,0,7],["LIVIA PEREIRA DA SILVA",0,1,4,29,72,18,5,21,0,7],["Ruan Rick Felipe de Lima",0,1,4,44,161,18,5,30,0,7],["LUCIANA ALVES SERRAO",0,0,4,47,247,6,5,33,0,6],["Lara Regina Viana de Andrade",0,1,4,10,248,7,5,10,0,8],["LARISSA EVILA BARBOSA DE MELO",0,0,4,47,218,6,5,33,0,6],["LARISSA EVILA BARBOSA DE MELO",1,0,4,47,218,6,5,33,0,6],["LILIANE FERREIRA DOS SANTOS",0,0,4,6,10,3,5,6,0,5],["Gabriele Cristina ehrich simao",0,0,4,5,249,3,5,6,0,5],["DAYANE EVELYN MACIEL DA SILVA",1,0,4,28,0,11,15,10,0,8],["Ana Lara Mamede Rodrigues",1,0,4,16,0,13,15,10,0,8],["Yuri De Menezes Bezerra",1,0,4,60,250,22,10,27,0,12],["MARIA MALENA DA SILVA CENA",0,1,4,56,235,29,5,39,0,14],["MARCELA SOARES DE MACENA SILVA",0,1,4,56,237,29,5,39,0,14],["bruna edileuza ferreira cavalcante",0,1,4,36,118,11,5,10,0,8],["GISELE VIEIRA DA SILVA",0,0,4,7,78,4,5,22,0,6],["EMILY GABRIELLE CUSTODIO DO NASCIMENTO",0,1,4,36,107,11,5,10,0,8],["MARIA JULIA ASSIS DE MEDEIRO",0,0,4,28,71,11,5,10,0,8],["Maria Eduarda Santos Mendes",1,0,4,39,124,19,5,25,0,11],["LETICIA CAROLAYNE DA SILVA CRUZ",1,1,4,11,0,8,15,10,0,8],["Alyny Niara da Silva Gomes",0,0,4,7,12,4,5,7,0,6],["IVO MARDEN LEITE MACHADO MOUSINHO",0,1,4,7,68,4,5,7,0,6],["Kaue Emanuel Araujo pessoa",1,0,4,33,0,13,15,10,0,8],["Gerlania dos Santos Almeida Silva",0,1,4,32,108,8,5,10,0,8],["Gerlania dos Santos Almeida Silva",1,1,4,32,108,8,5,10,0,8],["MARILYA STANZE FABRICIO DE SOUZA",0,0,4,20,234,15,5,14,0,10],["Valkiria Valeska Dantas Costa",0,0,4,12,21,8,5,10,0,8],["LUDMYLLA FERREIRA AMORIM",1,1,4,58,251,31,5,40,0,15],["WILIAM MELLO DA SILVA",1,1,0,51,206,26,14,0,0,0],["VIVIAN THAIS DE SOUZA DOS SANTOS",0,0,4,12,151,8,5,10,0,8],["VANESSA ALVES DINIZ DA SILVA",1,0,4,18,144,15,5,14,0,10],["Fernanda Guerra de Souza",0,2,4,8,13,5,5,8,0,7],["jeane Meire Calazans basilio da Silva",1,0,4,47,252,6,5,42,0,6],["nathalia cristina cavalcante dos santos",0,0,4,47,247,6,5,33,0,6],["nathalia cristina cavalcante dos santos",1,0,4,47,247,6,5,33,0,6],["LUARA FALCAO RODRIGUES CORDEIRO SILVA",0,0,4,3,5,2,5,5,0,5],["EMANOEL RAIR AMANCIO LIMA",0,1,4,3,1,2,5,5,0,5],["Klevilys Bezerra da silva",0,0,4,44,185,18,5,21,0,7],["KATHELEN SUELLEN DA SILVA AGUIAR",1,0,4,12,0,8,15,10,0,8],["Adryenny Karen De Brito Martins",1,0,4,12,151,8,5,10,0,8],["Daniel William Ramos de Sousa",0,0,4,25,156,8,5,10,0,8],["Allynne Marques de Andrade",1,0,4,32,233,8,11,28,0,8],["THALITA PEREIRA DA SILVA",1,0,4,48,244,19,5,25,0,11],["DEBORA DIANA OLIVEIRA DOS SANTOS",1,0,4,12,0,8,15,10,0,8],["Kevyn Willamys Candido Da Silva",0,1,4,12,42,8,5,10,0,8],["BEA SALES RIBEIRO",0,1,4,17,84,14,5,10,0,8],["BEA SALES RIBEIRO",1,1,4,17,84,14,5,10,0,8],["BRUNA GRIGORIO DOS SANTOS",0,1,4,29,96,18,5,21,0,7],["David iskisson da silva evaristo",0,0,4,5,8,3,17,6,0,5],["KARINE THAIRES SOUSA FELIX",0,1,4,47,0,6,15,33,0,6],["KARINE THAIRES SOUSA FELIX",1,1,4,47,0,6,15,33,0,6],["Daiany Cruz da Silva",0,0,4,29,94,18,5,21,0,7],["Elpidio Rodrigues Gomes Neto",0,0,4,29,93,18,5,21,0,7],["KENYA VITORIA MAIA RAMOS",0,1,4,5,249,3,5,6,0,5],["JOSE PAULO DE SOUZA JUNIOR",0,1,4,5,11,3,5,6,0,5],["Natasha Nascimento de Souza",0,1,4,6,10,3,5,6,0,5],["Pamela Souza dos Santos",0,1,4,6,30,3,5,6,0,5],["Luiza Linier Elisiario Arantes",0,0,4,6,30,3,5,6,0,5],["ANIELLY VITORIA DOS SANTOS SILVA",0,0,4,6,30,3,5,6,0,5],["JOSE ANDERSON MADRUGA DOS ANJOS",0,0,4,12,153,8,5,10,0,8],["ISABELA LOURENCO DO NASCIMENTO",0,0,4,8,191,5,5,31,0,7],["Josildo Alves de Souza Filho",0,0,4,44,192,18,5,21,0,7],["KAUE JOSE FERREIRA DA CONCEICAO",0,0,4,44,253,18,5,21,0,7],["Erick Anderson lima cintra",0,0,4,8,191,5,5,31,0,7],["Ely Almeida da Silva",0,0,4,44,192,18,5,21,0,7],["ALICE ROSE FELIX",1,0,4,50,204,27,5,35,0,11],["KARLA KARINA DOS SANTOS NUNES",0,1,4,10,86,7,5,10,0,8],["Ana cristina neves bezerra",1,0,4,61,254,22,10,27,0,12],["Leliane de Almeida Souza",0,0,4,12,140,8,5,10,0,8],["LEANDRO SIMOES DA SILVA",0,0,4,31,85,13,5,10,0,8],["LARISSA MARIA DE ARAUJO MIGUEL",1,0,4,22,52,4,5,17,0,6],["Maria Fernanda de Oliveira Sousa",0,1,4,56,236,29,5,39,0,14],["Maria Lidianny Vicente Souza",0,0,4,31,126,13,5,10,0,8],["Gerson Targino de Oliveira Filho",0,0,4,29,91,18,5,21,0,7],["JULIANA FALCAO DE ARAUJO",0,1,4,7,68,4,5,7,0,6],["Matheus Derick do Nascimento Silva",0,0,4,31,129,13,5,10,0,8],["Lucas da Silva lira",1,0,4,48,255,19,5,25,0,11],["EMMILY SANTANA FALCAO",1,0,4,32,213,8,5,10,0,8],["Diego Alexandre Santos de Sousa",0,1,4,12,19,8,5,10,0,8],["Diego Alexandre Santos de Sousa",1,1,4,12,19,8,5,10,0,8],["RENAN FERNANDES FERREIRA",0,1,4,17,164,14,5,10,0,8],["RENAN FERNANDES FERREIRA",1,1,4,17,164,14,5,10,0,8],["DIEGO DOS SANTOS GONCALVES",0,0,4,47,256,6,5,33,0,6],["Karolayne da silva Faustino",1,0,4,32,90,8,5,10,0,8],["Vanessa De Almeida Nascimento Germano",1,0,4,32,233,8,11,28,0,8],["BRUNA DE SOUZA THOMAZ",1,1,4,32,225,8,11,28,0,8],["Maria Helena Silva Borges",0,1,4,12,190,8,5,10,0,8],["JULYO CESAR BATISTA SOUZA",0,1,4,47,252,6,5,33,0,6],["Allan da Silva Costa",0,0,4,12,190,8,5,10,0,8],["Giovanna fagundes bomfim",0,0,4,47,256,6,5,33,0,6],["Giovanna fagundes bomfim",1,0,4,47,256,6,5,33,0,6],["ALLEF SOARES DE OLIVEIRA CHACOM",1,1,4,28,0,11,15,10,0,8],["Camila valeria da Silva Soares",0,1,4,22,172,4,5,17,0,6],["FLAVIA REJANE SILVA COSTA",0,0,4,47,218,6,5,42,0,6],["FLAVIA REJANE SILVA COSTA",1,0,4,47,218,6,5,42,0,6],["MADSON YAN ARAUJO ROLIM",0,1,4,29,96,18,5,21,0,7],["Joao Pedro Morais da Silva",1,0,4,22,133,4,5,17,0,6],["ROSEANE SANTANA MARTINS GOMES",1,1,4,32,225,8,11,28,0,8],["JOAO EVERTON DE LIMA RAMALHO",0,0,4,11,257,8,5,10,0,8],["JACIANE ALVES DE LIMA",1,0,4,17,164,14,5,10,0,8],["Marcos Vinicius de Souza Santos",0,0,4,29,94,18,5,21,0,7],["Ana Clara da Silva Souza",0,0,4,41,146,21,10,27,0,12],["Ana Clara da Silva Souza",1,0,4,41,146,21,10,27,0,12],["Jessica Gomes de Souza",0,1,4,0,258,15,5,14,0,10],["Jessica Gomes de Souza",1,0,4,0,258,15,5,14,0,10],["Roziqueze Vital Santos da Silva",0,0,4,42,0,22,15,27,0,12],["Roziqueze Vital Santos da Silva",1,0,4,42,0,22,15,27,0,12],["NATHALYA VITORIA TENORIO DA SILVA",0,0,4,29,99,18,5,21,0,7],["ARTUR RAIMY DE LIMA ANDRADE",0,1,4,29,93,18,5,21,0,7],["JOSENILDA NASCIMENTO DOS SANTOS",0,1,4,38,215,6,5,37,0,6],["Adrenys Silva das Neves",1,0,4,44,161,18,5,30,0,7],["Hanna Raydssa Rangel de moura",1,1,0,49,201,26,14,0,0,0],["MARIANA VITORIA OLIVEIRA SILVA",1,1,4,32,108,8,11,28,0,8],["ELBA RAMALHO BEZERRA DE LIMA",1,1,4,32,225,8,11,28,0,8],["Ryan Kevin Albuquerque de Almeida",1,1,4,32,233,8,11,28,0,8],["Emmily Gabriele Soares da Silva",1,0,4,48,194,19,5,25,0,11],["Matheus Mendes de Souza",1,1,4,32,214,8,11,28,0,8],["Marconaldo Andrade dos Santos",1,0,4,32,90,8,5,10,0,8],["BIANCA ARAUJO MEIRA",1,0,4,32,233,8,11,28,0,8],["Nicolly Sebestyen Lima da Silva",1,0,4,32,90,8,5,10,0,8],["LUIZ CARLOS DA SILVA JUNIOR",0,0,4,44,188,18,5,30,0,7],["JACIARA JOYCE DE OLIVEIRA MEDEIROS",0,1,4,47,218,6,5,33,0,6],["Camilly Vitoria Freitas da Silva",0,1,4,29,95,18,5,21,0,7],["Maria Luiza Pedrosa Ribeiro",0,0,4,29,99,18,17,21,0,7],["Elielma Elaine Nascimento da Franca",1,0,4,29,259,18,17,21,0,7],["Maria Micaeli de Almeida Herculano",0,0,4,29,259,18,17,21,0,7],["EMILLY VITORIA CHAVES DOS SANTOS",0,0,4,29,99,18,17,21,0,7],["Brigid Alves Da Silva Ferreira",0,0,4,29,99,18,17,21,0,7],["VITORIA ALMEIDA DOS SANTOS",0,1,4,29,98,18,17,21,0,7],["THAIS NOBREGA BRITO",0,1,4,19,260,16,17,15,0,5],["Myllena Valesca dos Santos Fonseca",0,1,4,60,250,22,17,27,0,12],["Myllena Valesca dos Santos Fonseca",1,0,4,60,250,22,17,27,0,12],["JULIA FERNANDES DE ALMEIDA GOMES",0,1,4,12,140,8,17,10,0,8],["Ana Karollyne Augusto da Silva",0,0,4,11,18,8,17,10,0,8],["Leonardo Leite Gomes Ribeiro",0,1,4,22,133,4,5,17,0,6],["Tereza Beatriz da Costa Silva",0,0,4,5,11,3,5,6,0,5],["Joel Henrique Ferreira dos Santos",0,0,4,5,135,3,5,6,0,5],["Joel Henrique Ferreira dos Santos",1,0,4,5,135,3,5,6,0,5],["Gabriel Alves Ferreira Da Silva",0,0,4,6,10,3,5,6,0,5],["DEBORA DOS SANTOS MARQUES",0,0,4,5,9,3,5,6,0,5],["Ednalva dos santos oliveira",0,1,4,6,142,3,5,6,0,5],["ANNA REBECCA PONTES DE SOUZA",0,0,4,6,30,3,5,6,0,5],["RAYANNE REGILLA DE MENESES LIMA",1,0,4,27,261,13,5,10,0,8],["AMANDA DA SILVA ARAUJO",1,0,4,61,262,22,10,27,0,12],["MAXSUEL TAVARES DOS SANTOS",0,1,4,28,263,11,13,10,0,8],["MAXSUEL TAVARES DOS SANTOS",1,0,4,28,263,11,13,10,0,8],["Arthur vinicius alves de melo",0,0,0,62,0,33,19,43,0,16],["Arthur vinicius alves de melo",1,0,0,62,0,33,19,43,0,16],["KAIO CESAR DA SILVA SOARES",0,0,4,28,120,11,5,10,0,8],["Maria Eduarda Silva Borges",0,0,4,44,253,18,5,21,0,7],["JACO JOSE VIEIRA",0,1,4,16,47,13,5,10,0,8],["Jefferson do Nascimento Silva",0,1,4,58,245,31,5,40,0,15],["Jefferson do Nascimento Silva",1,1,4,58,245,31,5,40,0,15],["NAJHARA DE FATIMA ARRUDA CAETANO",0,0,4,44,192,18,5,21,0,7],["Bruno Freire de franca",0,0,4,44,193,18,5,30,0,7],["Bruno Freire de franca",1,0,4,44,193,18,5,30,0,7],["OMAR HENRIQUE MACEDO ALVES",0,0,4,11,41,8,5,10,0,8],["LAILA VITORIA SOARES LOPES",1,0,4,5,8,3,5,6,0,5],["Karina Cordeiro Saraiva",0,0,4,6,264,3,5,6,0,5],["Tamires da Silva Andrade",0,0,4,5,8,3,5,6,0,5],["Luana Ferreira Sales",0,0,4,5,135,3,5,6,0,5],["Pedro Lucas Ferreira De Araujo",0,0,4,5,135,3,5,6,0,5],["Ana karollyna Brito dos Santos",0,0,4,12,265,8,5,10,0,8],["JOAO NICOLAS SILVA",1,0,4,33,0,13,15,10,0,8],["Mateus Henrique Souza da Costa",0,0,4,28,120,11,5,10,0,8],["MARIA VITORIA GOMES DA SILVA",1,0,4,25,0,8,15,10,0,8],["Adriane Rebeka Reis de Araujo",0,0,4,5,8,3,5,6,0,5],["Sandrielly Xavier Lins",0,0,4,6,10,3,5,6,0,5],["Nathanael Filipe Evaristo dos Santos",1,1,4,45,266,24,5,32,0,7],["Marielly Cristina Ribeiro Silva",0,0,4,11,37,8,5,10,0,8],["MARIA MONARA LIMA DA COSTA",0,0,4,44,193,18,5,30,0,7],["Hugo Gabriel Bezerra da Silva",0,0,4,29,98,18,5,21,0,7],["BRUNO RAPHAEL MAMUD DE OLIVEIRA",0,0,4,44,253,18,5,21,0,7],["Walesca Soares do Nascimento",0,0,4,44,253,18,5,21,0,7],["HELLEN TAINARA JOSE DE FREITAS",0,0,4,44,170,18,5,21,0,7],["Maria Luiza Nunes do Nascimento",0,0,4,8,168,5,5,31,0,7],["Layza Gabriely da Silva Santos",1,1,4,12,0,8,15,10,0,8],["MARIA CLARA PEREIRA CARVALHO GOMES",1,0,4,12,0,8,15,10,0,8],["Gabriel Silva de Lima",0,0,4,63,0,34,15,44,0,5],["Beatriz Borges Santos Nascimento",1,0,4,20,238,15,5,14,0,10],["MARIA KAELI MENESES DE ARAUJO",0,0,4,18,0,15,5,14,0,10],["MARIA KAELI MENESES DE ARAUJO",1,0,4,18,0,15,5,14,0,10],["Marcus Vinicius Silva de Morais",0,0,4,44,188,18,5,30,0,7],["GIULIA MARIA SEIXAS DE ARAUJO",0,1,4,29,96,18,5,21,0,7],["BRUNO RENATO DA SILVA LIRA",0,0,4,29,96,18,5,21,0,7],["Matheus Guedes da Silva",0,0,4,29,80,18,5,21,0,7],["KAUA GABRIEL PEREIRA RODRIGUES",0,1,4,29,95,18,5,21,0,7],["Maria Isabel da Silva Lima",0,0,4,29,99,18,5,21,0,7],["Eduardo Gomes da Silva",0,0,4,29,91,18,5,21,0,7],["MARCIA VITORIA XAVIER DA SILVA",1,0,4,19,202,16,5,15,0,5],["EVELYN VITORIA FELIPE BRASIL DO NASCIMENTO",1,0,4,44,188,18,5,30,0,7],["Kevyn Dias De Oliveira",0,0,4,29,93,18,5,21,0,7],["LAYS SOUSA DE MEDEIROS",1,0,4,29,94,18,5,21,0,7],["Eloise Alencar Nascimento",0,0,4,29,99,18,5,21,0,7],["Allan Guilherme Bento de Lima",0,1,4,25,0,8,15,10,0,8],["Allan Guilherme Bento de Lima",1,0,4,25,0,8,15,10,0,8],["Larissa Rafaella da Silva Pereira",0,0,4,29,93,18,5,21,0,7],["RAINARA SILVA DO NASCIMENTO MENEZES",0,0,4,29,80,18,5,21,0,7],["Lucas Nascimento de Figueiredo",0,0,4,29,94,18,5,21,0,7],["JOSE GOMES DA SILVA JUNIOR",0,1,4,29,72,18,5,21,0,7],["Thays Renally Rodrigues Alves",0,0,4,29,99,18,5,21,0,7],["SILVANA BERTOLDO DA SILVA",0,0,4,29,91,18,5,21,0,7],["DIEGO OLIVEIRA DA SILVA",0,1,4,29,95,18,5,21,0,7],["JOAO VICTOR DA SILVA RAMOS",0,1,4,29,91,18,5,21,0,7],["MARIANA PEREIRA DE ARRUDA",0,0,4,44,170,18,5,21,0,7],["JENNYFFER LOUISE SALES BARRETO",1,0,4,43,267,23,20,45,0,12],["ISIS CONCEICAO DE OLIVEIRA CUSTODIO",1,0,4,64,0,27,15,35,0,11],["Nayane rodrigues da cunha",1,0,4,22,130,4,5,17,0,6],["Eduarda Lohanny Silva Paulo dos Santos",1,1,4,10,86,7,5,10,0,8],["Manuela da Silva Souza",0,1,0,51,268,26,14,0,0,0],["Manuela da Silva Souza",1,0,0,51,268,26,14,0,0,0],["Lara Kamila Freitas Costa",1,0,4,34,104,19,8,23,0,11],["Bianka da Cruz Candido",0,0,4,63,269,34,5,44,0,5],["Bianka da Cruz Candido",1,0,4,63,269,34,5,44,0,5],["Wedson da silva Mendes",1,0,4,63,270,34,5,44,0,5],["Roberta Evaristo da Silva",1,0,4,34,271,19,8,23,0,11],["Sasha Abigail Alves dos Santos",1,1,4,32,108,8,11,28,0,8],["Andrielly Lima Silva",0,1,4,65,272,35,21,46,0,11],["Kaio Gabriel Ferreira Da Silva",0,0,4,18,242,15,5,14,0,10],["JHOELY ARAGAO DA SILVA",1,1,4,11,0,8,15,10,0,8],["LAUAM HENRYK DOS SANTOS QUEIROZ",0,0,4,18,242,15,5,14,0,10],["Miguel Bernardo Honorato de lima",1,1,4,66,273,36,5,47,0,10],["FABIO DOS SANTOS BORGES JUNIOR",0,0,4,63,274,34,5,44,0,5],["FABIO DOS SANTOS BORGES JUNIOR",1,0,4,63,274,34,5,44,0,5],["Paulo Di Tarso Pablo",1,1,5,67,0,37,22,11,0,9],["AMANDA PEREIRA SILVEIRA",0,0,4,63,0,34,23,44,0,5],["FERNANDA LETICIA DA SILVA SALES",0,1,4,29,99,18,5,21,0,7],["ALICE LOUREANO MARTINS DA SILVA",1,1,4,38,217,6,5,37,0,6],["RAISSA LUCENA DE ALMEIDA RAMOS",0,1,4,10,15,7,5,10,0,8],["KAYLLANY AVELINO DA SILVA SAMPAIO",0,0,4,44,253,18,5,21,0,7],["Riquelme dos Santos Herculano",0,1,4,29,80,18,5,21,0,7],["EVERTON FABIO PINHEIRO DOS SANTOS JUNIOR",0,0,4,29,97,18,5,21,0,7],["VINICIUS ARAUJO DA SILVA",0,0,4,5,9,3,5,6,0,5],["Lidiane Barros Galdino da Silva",0,1,4,5,249,3,5,6,0,5],["Rafaella Formiga Mendes",0,0,4,5,8,3,5,6,0,5],["Raira dos Santos Pereira",0,1,4,5,249,3,5,6,0,5],["CECILIA GABRIELA BEZERRA MUNIZ",0,0,4,6,10,3,5,6,0,5],["Andressa Roberta Quirino Soares",0,1,4,5,249,3,5,6,0,5],["DANIELLE DE HOLANDA GONCALVES",0,0,4,52,275,21,10,27,0,12],["DANIELLE DE HOLANDA GONCALVES",1,0,4,52,275,21,10,27,0,12],["KAUA LUCAS VIEIRA DE FARIAS",0,0,4,29,98,18,5,21,0,7],["Venicio Vieira da Costa Oliveira",0,1,4,29,95,18,5,21,0,7],["MATHEUS HENRIQUE MENDONCA DO NASCIMENTO",1,0,4,61,276,22,10,27,0,12],["LOHANA VITORIA DA ROCHA MARTINS",1,0,4,20,239,15,5,14,0,10],["Rikelmy Paulino dos Santos",1,1,4,45,171,24,5,32,0,7],["Arineide Lopes da Silva",0,1,4,45,266,24,5,32,0,7],["ANDRE LUCAS SILVA COSTA",1,1,0,0,277,38,14,0,0,0],["ALAYDE GUIMARAES FERREIRA NETA",1,0,4,12,0,8,15,10,0,8],["MATHEUS DE OLIVEIRA SILVA",1,0,4,68,278,22,10,27,0,12],["karoline vitoria clementino da silva",1,0,4,60,250,22,10,27,0,12],["Vinnycius Raphael Lacerda Borba",0,0,4,28,0,11,15,10,0,8],["Vinnycius Raphael Lacerda Borba",1,0,4,28,0,11,15,10,0,8],["Emmilly Roberta Minervino da Silva",1,0,4,0,0,0,10,27,0,12],["MARIANA CABRAL FERREIRA DE ANDRADE",0,1,4,5,249,3,5,6,0,5],["JOAO VICSON DE LIMA AMORIM NOGUEIRA",0,0,4,5,249,3,5,6,0,5],["ANTHONY CAUA DOS SANTOS BANDEIRA",0,1,4,5,249,3,5,6,0,5],["ODILIA RIBEIRO DE LIMA GUIMARAES",1,0,4,34,232,19,8,23,0,11],["EDJANIO CANDIDO MEDEIROS",0,1,4,56,237,29,5,39,0,14],["JAMILY VITORIA DOMINGOS DOS SANTOS",0,0,4,12,21,8,5,10,0,8],["Yasmin carvalho de Lima",0,2,4,26,65,0,5,26,0,7],["MEG IBIAPINA BRUNINI",1,0,4,22,131,4,5,17,0,6],["PRISCILA RIBEIRO ALVES",1,0,4,0,0,0,5,20,0,6],["ALLANA LIGIA MACEDO FRAGA",0,0,4,10,248,7,5,10,0,8],["JOSILENE DE SOUSA MARAVILHA",0,0,4,44,170,18,5,21,0,7],["MARIA VITORIA DO NASCIMENTO SILVA",1,0,4,31,0,13,15,10,0,8],["NICA BEZERRA SOARES",1,1,4,15,0,11,15,10,0,8],["Caliane Kelly Silva de Almeida",0,1,4,44,216,18,5,38,0,7],["Mariana Gomes de Sousa",0,0,4,16,109,13,5,10,0,8],["Eduardo dos Santos de lima",0,1,4,29,98,18,5,21,0,7],["Thallyson da Silva Santos",1,0,4,17,84,14,5,10,0,8],["Lidiane Oliveira Marques",0,1,4,10,279,7,5,10,0,8],["Raphael Barbosa Ferreira da Silva",1,0,4,32,214,8,5,10,0,8],["Milena Marques dos Santos",1,1,4,3,280,2,5,5,0,5],["Gleyce ene Andrade de Oliveira da Silva",0,0,4,22,52,4,5,17,0,6],["ELISANGELA SANTOS DA SILVA",0,1,4,3,3,2,5,5,0,5],["DEBORA QUIRINO FERREIRA DA SILVA",0,0,4,5,135,3,5,6,0,5],["DEBORA QUIRINO FERREIRA DA SILVA",1,0,4,5,135,3,5,6,0,5],["RAUAN JOAO HENRIQUES DE SANTANA",0,0,4,6,142,3,5,6,0,5],["ROGERIO ARAGAO DE LIMA JUNIOR",0,1,4,5,8,3,5,6,0,5],["ROGERIO ARAGAO DE LIMA JUNIOR",1,0,4,5,8,3,5,6,0,5],["Sara Gizele das neves Souza",0,0,4,10,86,7,5,10,0,8],["Karolayne Herminio de Freitas",0,1,4,56,236,29,5,39,0,14],["Wanessa Cassia Rodrigues Gomes da Silva",1,0,4,12,281,8,5,10,0,8],["Jamilly Santos de Souza",1,1,4,32,214,8,11,28,0,8],["CRISTIANA MATIAS ALVES",0,0,4,53,212,28,5,36,0,10],["TATIANA CARINA CORREIA DA SILVA",0,0,4,5,282,3,5,6,0,5],["TONY VINICIUS DE FREITAS",0,1,4,6,264,3,5,6,0,5],["LEYLA LETICIA DE SOUZA MELO",0,0,4,6,10,3,5,6,0,5],["Vanessa Pereira dos santos",0,1,4,53,283,28,5,36,0,10],["Vanessa Pereira dos santos",1,1,4,53,283,28,5,36,0,10],["Ramilly Dos Santos Ferreira",0,1,4,53,212,28,5,36,0,10],["MARIA EDUARDA GALDINO DO MONTE BATISTA",0,1,4,6,30,3,5,6,0,5],["MARIA EDUARDA GALDINO DO MONTE BATISTA",1,1,4,6,30,3,5,6,0,5],["INACIO RODRIGUES DE SOUZA NETO",0,0,4,5,9,3,5,6,0,5],["ALINE ANDRE DA SILVA",0,0,4,6,10,3,5,6,0,5],["JENNYFFE KAYLLANE CONCEICAO DE OLIVEIRA",1,0,4,6,31,3,5,6,0,5],["ANDLEY LACET CHAGAS",1,1,0,49,284,26,14,0,0,0],["JOSE ALESSANDRO DIAS JUNIOR",1,0,4,0,0,13,13,10,0,8],["GIOVANNA DE LOURDES FELIX MACHADO GABY",1,0,4,15,181,11,5,10,0,8],["EDUARDO ANTONIO CALIXTO PAIVA",0,0,4,19,48,16,5,15,0,5],["JOSE PEDRO FERREIRA XAVIER",1,0,4,32,90,8,11,28,0,8],["HELLEN PEREIRA QUIRINO",1,0,4,32,90,8,5,10,0,8],["STHEFANY TAINA SANTANA CANDIDO",0,0,4,7,78,4,5,22,0,6],["GERSIANA DE LEMOS SILVA",0,0,4,44,170,18,5,21,0,7],["FLEIDES CHAVES DA SILVA FILHO",0,0,4,44,170,18,5,21,0,7],["ROGERIA PONTES DO NASCIMENTO DIAS",0,0,4,44,192,18,5,21,0,7],["YHORRANA ESTER SILVA TEOFILO",0,0,4,5,135,3,5,6,0,5],["MARIA CLARA PINTO ANDRE",0,0,4,6,10,3,5,6,0,5],["DARLAN WILLIAN VIEIRA PEREIRA",0,1,4,6,142,3,5,6,0,5],["ALANA PRISCILA BORGES SILVEIRA",0,1,4,6,10,3,5,6,0,5],["FHILIPE APARECIDO RODRIGUES DE FRANCA",0,0,4,12,265,8,5,10,0,8],["CLAUDIA MIGUEL SOARES DA COSTA",0,1,4,7,12,4,5,7,0,6],["ERIKA GOMES DA SILVA",0,1,4,4,27,2,5,5,0,5],["ADRYELLI MARTINS DA SILVA",0,1,4,56,237,29,5,39,0,14],["JOAQUIM FERREIRA CARNEIRO BISNETO",1,1,4,32,108,8,11,28,0,8],["YANDRA RACHEL SILVA SANTOS",0,1,4,33,285,13,5,10,0,8],["VITORIA CAROLINE FERREIRA RESENDE",1,0,4,16,0,13,15,10,0,8],["RUAN MATEUS COSTA LEANDRO",1,0,4,31,286,13,13,10,0,8],["ERIKA DA SILVA COSTA",1,0,0,51,287,26,14,0,0,0],["IKHOL HADJHI GOMES SILVA",1,0,4,28,0,11,15,10,0,8],["LUCIMAR SILVA DO REGO ARAUJO",1,0,4,59,246,32,11,41,0,8],["GRAZYELLA VITORIA DA SILVA SANTOS",1,0,4,0,0,0,10,27,0,12],["JOSEFA SOARES DA SILVA",1,0,4,16,0,13,15,10,0,8],["JOSEFA CRISTINA DE ALMEIDA SOUZA",0,0,4,16,176,13,5,10,0,8],["JOSEFA CRISTINA DE ALMEIDA SOUZA",1,2,4,16,176,13,5,10,0,8],["KAMILA AMANDA DA SILVA BATISTA",0,0,4,29,94,18,5,21,0,7],["THIAGO ALVES DE FRANCA",1,1,4,28,0,11,15,10,0,8],["ERBETH SILVA DE FREITAS",0,1,4,56,237,29,5,39,0,14],["EDILMA MARIA BEZERRA DA SILVA",0,0,4,20,0,15,15,14,0,10],["BRUNA BARBOSA LEITE DA SILVA",0,0,4,5,8,3,5,6,0,5],["WILLYAN DA SILVA ANSELMO",0,0,4,22,133,4,5,17,0,6],["Maria Luiza dos Santos Pereira",1,0,4,22,130,4,5,17,0,6],["JOELMA JANUARIO DA SILVA",0,1,4,22,133,4,5,17,0,6],["BRAULIO SERGIO SERRAO DE OLIVEIRA",0,1,4,56,288,29,5,39,0,14],["DEMETRIUS RAPHAEL MARINHO FERREIRA",0,1,4,7,12,4,5,7,0,6],["JORDES ALEXANDRE FERREIRA DA SILVA",0,0,4,56,237,29,5,39,0,14],["RAYSSA JAMARA DA SILVA SOUZA",0,1,4,45,171,24,5,32,0,7],["MAYK KAYNA LUSTOSA QUIRINO",0,0,4,29,95,18,5,21,0,7],["MARCOS BORGES DOS SANTOS",1,0,4,36,118,11,5,10,0,8],["DANIELLE ALEXANDRE DA COSTA",1,0,4,32,90,8,11,28,0,8],["LARISSA EVILYN DA SILVA ALBUQUERQUE",0,1,4,15,29,11,5,10,0,8],["LAYS KETHILY MATIAS DE SENA",0,0,4,22,130,4,5,17,0,6],["BIANCA XAVIER",1,0,4,8,169,5,5,8,0,7],["FERNANDA CAVALCANTI FAGUNDES",0,0,4,22,52,4,5,17,0,6],["IVAN GUSTAVO PEREIRA SILVA",0,0,4,33,92,13,5,10,0,8],["IVAN GUSTAVO PEREIRA SILVA",1,0,4,33,92,13,5,10,0,8],["LEON DUTRA DE SOUZA",1,0,4,60,250,22,10,27,0,12],["ANA FLAVIA MARTINS DE SOUSA",0,0,4,18,242,15,5,14,0,10],["ISLAYNE DA SILVA PEREIRA",0,1,4,0,289,15,5,14,0,10],["ANA PAULA GUIMARAES DA SILVA",0,0,4,18,242,15,5,14,0,10],["YASMIN SANTOS DA SILVA",0,0,4,18,242,15,5,14,0,10],["FLAVIA PEREIRA SANTOS ALVES",0,1,4,56,237,29,5,39,0,14],["RENATA KELLY SILVA DOS SANTOS",0,1,4,56,236,29,5,39,0,14],["NAUAN FELIPE DA SILVA",1,0,4,18,39,15,5,14,0,10],["MARCELO ANTONIO DOS SANTOS",0,0,4,20,234,15,5,14,0,10],["LOURRYZALLE MATHELLA FERNANDES DA SILVA",0,0,4,18,242,15,5,14,0,10],["CAIO CAUA MEDEIROS DE MELO",0,0,4,18,0,15,5,14,0,10],["TATIANY PEREIRA BEZERRA DA SILVA",1,0,0,0,290,39,24,48,0,0],["RANANDA KALYNE RODRIGUES DOMINGOS",0,0,4,5,8,3,5,6,0,5],["RANANDA KALYNE RODRIGUES DOMINGOS",1,0,4,5,8,3,5,6,0,5],["ANA KAROLINE AIRES DA SILVA",0,1,4,6,264,3,5,6,0,5],["ARTHUR SOARES DO NASCIMENTO SOUSA",0,0,4,7,66,4,5,7,0,6],["IGOR VINICIUS DA SILVA MARINHO",0,0,4,17,38,14,5,10,0,8],["IGOR VINICIUS DA SILVA MARINHO",1,0,4,17,38,14,5,10,0,8],["MATHEUS GABRIEL SOARES DE ANDRADE",0,0,4,11,226,8,5,10,0,8],["MARINA ALVES DE LUCENA",0,0,4,12,265,8,5,10,0,8],["APARECIDA DE FATIMA BEZERRA DA SILVA",0,0,4,11,23,8,5,10,0,8],["DAIANE DOS SANTOS NASCIMENTO",0,0,4,11,226,8,5,10,0,8],["JULIANA NUNES DE FARIAS",0,0,4,11,226,8,5,10,0,8],["CIBELE DANTAS BARBOSA",0,0,4,14,25,10,5,12,0,10],["SAMUEL LUCAS GOMES DOS SANTOS",1,0,4,47,252,6,5,33,0,6],["JESSYCA RAQUEL DA SILVA GABRIEL PEREIRA",0,1,4,38,215,6,5,37,0,6],["NIELSEN LIMA DO MONTE",0,0,4,44,161,18,5,30,0,7],["LUANNY LEANDRO BARBALHO",1,0,4,9,14,6,5,9,0,6],["LUCIMAR FERREIRA DO NASCIMENTO",1,0,4,38,215,6,5,37,0,6],["MARIA NAYADNI BELO DA SILVA",0,1,4,26,64,0,5,19,0,7],["LUCAS SILVA DA COSTA",1,1,4,15,0,11,15,10,0,8],["INGRID GABRIELLY ALMEIDA MOURA",1,1,4,32,108,8,5,10,0,8],["ALYSSON GABRIEL FEITOSA PAIVA",0,0,4,35,112,7,5,10,0,8],["LUIZA KETYLLE DOS SANTOS",1,0,4,61,276,22,10,27,0,12],["KAYANE MENDES BARBOSA",1,0,4,46,180,25,10,27,0,12],["JOSEANE BEATRIZ OLIVEIRA DA SILVA",1,0,4,32,233,8,11,28,0,8],["DEYSIANNE DE ARAUJO MEDEIROS",1,0,4,32,90,8,5,10,0,8],["ANA KARINA DO NASCIMENTO OLIVEIRA",0,0,4,56,237,29,5,39,0,14],["CARLA ELIDA LINS FERREIRA",0,0,4,20,240,15,5,14,0,10],["ALLAN DE SOUSA LINHARES",1,0,4,20,238,15,5,14,0,10],["KAILLANY KENNEANDREA XAVIER SILVA",1,0,4,39,124,19,5,25,0,11],["DAYANNE DA SILVA BARBOSA",1,0,4,11,226,8,5,10,0,8],["GREYSIMAR ALEJANDRA SOMOZA HERRERA",1,0,4,7,66,4,5,7,0,6],["GEOVANA SILVA DA CONCEICAO",0,1,4,9,291,6,5,49,0,6],["GEOVANA SILVA DA CONCEICAO",1,1,4,9,291,6,5,49,0,6],["JUCICLEIA DOS SANTOS CORDEIRO",1,0,4,6,142,3,5,6,0,5],["JOSEANA FERREIRA DA SILVA",1,1,4,32,90,8,5,10,0,8],["LUCAS RICARDO ROCHA",0,0,4,6,142,3,5,6,0,5],["LUCAS RICARDO ROCHA",1,1,4,6,142,3,5,6,0,5],["YAGO PAREDES DE SA MENEZES",0,1,4,5,249,3,5,6,0,5],["SUELLEN APARECIDA DOS SANTOS LIMA",0,1,4,45,171,24,5,32,0,7],["SUHIAN EUNICE DE MEDEIROS SANTOS",1,1,4,9,14,6,5,9,0,6],["ANA PATRICIA ANDRADE DE ARAUJO",1,1,4,45,292,24,11,50,0,7],["DIANA KARLA BARROS DA SILVA",0,0,4,19,48,16,5,15,0,5],["JOSEFA SANTOS BARBOSA SOARES",0,0,4,20,234,15,5,14,0,10],["ANA CLAUDIA FERREIRA DA SILVA",0,0,4,18,242,15,5,14,0,10],["VICTOR DIAS DE SOUSA",0,0,4,7,74,4,5,22,0,6],["SILVANA DE OLIVEIRA",1,0,4,38,217,6,5,37,0,6],["JAILSON JONATHAS LUNA DO NASCIMENTO",0,1,4,22,172,4,5,17,0,6],["ALAN MAYLSON CASSIMIRO BANDEIRA",0,0,4,22,132,4,5,17,0,6],["MARIA JOSE LETICIA FREIRE DA SILVA",0,1,4,26,65,0,5,26,0,7],["ALLAN CARLOS MARINHO",0,0,4,26,64,0,5,19,0,7],["JOSE VINICIUS DE SOUZA FILHO",0,1,4,33,92,13,5,10,0,8],["ANTONIO VICENTE DA SILVA FILHO",0,1,4,28,71,11,5,10,0,8],["ANTONIO VICENTE DA SILVA FILHO",1,1,4,28,71,11,5,10,0,8],["DENIZIA CARLA PINHEIRO DINIZ",0,0,4,28,187,11,5,10,0,8],["DENIZIA CARLA PINHEIRO DINIZ",1,0,4,28,187,11,5,10,0,8],["LEANDRA JOYCE CORREIA DO NASCIMENTO",0,1,4,6,293,3,5,6,0,5],["LEANDRA JOYCE CORREIA DO NASCIMENTO",1,1,4,6,293,3,5,6,0,5],["FABRICIO HERDERSON DOS SANTOS SILVA",0,0,0,69,294,40,25,51,0,0],["MIKAELLEN JHENNIFER BRASIL DA COSTA",0,1,0,0,35,12,7,13,0,0],["MARIA DA CONCEICAO ANDRADE DA SILVA",0,0,4,44,185,18,5,21,0,7],["ITALO VICTOR CARDOSO DA SILVA",0,1,4,6,293,3,5,6,0,5],["PAULA RAYANE DA SILVA OLIVEIRA",0,1,4,6,293,3,5,6,0,5],["ANNDRESSA SILVA RAMOS DE OLIVEIRA",1,0,4,6,10,3,5,6,0,5],["WALTER LOPES DE SIQUEIRA NETO",0,0,0,0,0,41,26,52,0,0],["REBECA RIBEIRO DA SILVA",1,0,4,4,33,2,5,5,0,5],["WIDSOR PADUA DE SOUZA",1,0,4,10,43,7,5,10,0,8],["JANIELLY ALEXANDRE DE PONTES NUNES",0,1,4,10,86,7,5,10,0,8],["JANIELLY ALEXANDRE DE PONTES NUNES",1,1,4,10,86,7,5,10,0,8],["MARIA ALICE VICENTE HENRIQUE DE ARAUJO",0,1,4,47,252,6,5,33,0,6],["MARIA ALICE VICENTE HENRIQUE DE ARAUJO",1,1,4,47,252,6,5,33,0,6],["ALUSKA BRENDA DUARTE DA SILVA",0,0,4,26,65,0,5,19,0,7],["SUELLI BEZERRA DA SILVA",0,1,4,5,11,3,5,6,0,5],["ANA PAULA SILVA DE SOUZA",1,0,4,19,48,16,5,15,0,5],["MARIA BEATRIZ PESSOA DE CARVALHO",0,0,4,19,48,16,5,15,0,5],["MARIA DAS NEVES SOUZA DE MELO NETA",0,0,4,20,239,15,5,14,0,10],["THAIS DANYELLE DE SOUZA MESQUITA",0,2,4,47,184,6,5,33,0,6],["THAIS DANYELLE DE SOUZA MESQUITA",1,1,4,47,184,6,5,33,0,6],["JOAO VITOR OLIVEIRA DE PADUA",0,0,4,18,0,15,23,14,0,10],["ANALICIA DA SILVA SANTANA",0,0,4,20,240,15,5,14,0,10],["MARIA CRISLAINE DE FRANCA CARNEIRO",0,1,4,22,172,4,5,17,0,6],["BEATRIZ DOS SANTOS PEREIRA",0,0,0,0,290,39,27,48,0,0],["LUA SAMARA MARQUES BEZERRA",0,1,4,38,215,6,5,37,0,6],["GABRIEL VINICIUS DE ARAUJO DONATO",0,1,1,70,0,42,4,4,0,4],["JOAO VICTOR RIBEIRO LIMA",0,1,1,1,0,1,28,1,0,1],["HANDESON ROCHA RODRIGUES",0,0,5,71,0,43,6,11,0,9],["NATHALLY ALVES MARTINS",0,1,4,7,66,4,5,7,0,6],["AURELIA JACQUELINE AIRES DOS SANTOS FERREIRA",0,0,4,22,133,4,5,17,0,6],["AURELIA JACQUELINE AIRES DOS SANTOS FERREIRA",1,0,4,22,133,4,5,17,0,6],["LUIS EDUARDO DE SOUZA ARAUJO",0,0,4,7,78,4,5,22,0,6],["KAUA FELIPE DANTAS SANTOS",1,1,4,47,256,6,5,33,0,6],["GABRIEL ALECKS FERNANDES DA COSTA",0,0,4,19,48,16,5,15,0,5],["SAMUEL FRUTUOSO SALES",0,0,4,29,91,18,5,21,0,7],["MARIA IRAIDES RODRIGUES DE MOURA",1,0,4,20,240,15,5,14,0,10],["DEBORA NAIHELLY DE SOUSA PACIFICO",0,0,4,47,184,6,5,33,0,6],["AMANDA MENDONCA MARTINS",0,1,4,38,215,6,5,37,0,6],["AMANDA MENDONCA MARTINS",1,1,4,38,215,6,5,37,0,6],["VIVIAN EVELYN DA SILVA SANTOS",0,0,4,47,247,6,5,33,0,6],["EDJANE DE LIMA CESAR",1,0,7,72,295,44,29,53,0,17],["ANA SANTANA DE MEDEIROS SILVA",0,1,4,38,217,6,5,37,0,6],["ROSSANA KARINNY FORTUNATO TORRES PEREIRA",0,0,4,7,74,4,5,22,0,6],["JULIA MARIA FERREIRA DE OLIVEIRA",1,1,4,4,33,2,11,5,0,5],["JOAO HENRIQUE VALENCIO DO NASCIMENTO",0,1,4,26,65,0,5,19,0,7],["CARLA CRISTINA FALIZ VOLGA",0,0,4,26,64,0,5,19,0,7],["ALLANA BATISTA SILVA",1,0,4,20,240,15,5,14,0,10],["ALANA LUCIA CASTRO SILVA",0,0,4,35,105,7,5,10,0,8],["WHANDA YASMIN SOARES DOS SANTOS",0,1,4,38,217,6,5,37,0,6],["WHANDA YASMIN SOARES DOS SANTOS",1,1,4,38,217,6,5,37,0,6],["RAQUEL ROCHA MENDES",0,1,4,14,25,10,5,12,0,10],["matheus alves da silva",0,0,4,20,234,15,5,14,0,10],["RYAN VICTOR PEREIRA DA SILVA",0,0,4,18,242,15,5,14,0,10],["MARIA LUIZA OLIVEIRA DA SILVA",0,1,4,3,280,2,5,5,0,5],["ALAN BRITO LUIS",0,0,4,56,237,29,5,39,0,14],["ANTONIO SERAFIM DOS SANTOS FILHO",0,1,4,35,296,7,13,10,0,8],["RUAMA CHRISLAYNE SOBRAL BEZERRA",0,0,4,5,282,3,5,6,0,5],["ANTONIO MARCOS CLEMENTINO DE OLIVEIRA",0,0,4,18,242,15,5,14,0,10],["RUAN JORGE ARAUJO DE SOUZA",0,1,4,22,172,4,5,17,0,6],["JUSSARA FERREIRA DA SILVA",0,0,4,6,297,3,5,6,0,5],["LUIZ HENRIQUE DOS SANTOS MEDEIROS",0,0,4,6,297,3,5,6,0,5],["MARIA APARECIDA DE CARVALHO ALVES",1,0,4,20,238,15,5,14,0,10],["JONATHAN PEREIRA DOS SANTOS",0,0,4,7,74,4,5,22,0,6],["PRISCILA SOUZA TARGINO",0,1,4,0,289,15,5,14,0,10],["JULIANA DIOMEDES DA SILVA",0,0,4,18,242,15,5,14,0,10],["WESLEY SOUZA REGIS",0,1,4,22,172,4,5,17,0,6],["ANA PAULA FERREIRA DA SILVA",1,0,4,35,122,7,5,10,0,8],["THIAGO FIGUEIREDO DE QUEIROZ BORGES",0,0,4,35,122,7,5,10,0,8],["LUCICLEIDE LETICIA FARIAS GADELHA",0,0,4,10,86,7,5,10,0,8],["LAIS PEREIRA DE LIMA ANACLETO",0,0,4,7,298,4,5,20,0,6],["ANNEY BEATRIZ DIAS DE MELO",0,0,4,7,78,4,5,22,0,6],["CELENE JOSEFA OLIVEIRA BASILIO DA SILVA",0,2,4,56,237,29,5,39,0,14],["MARINA LETICIA LIMA SILVA",0,0,4,44,253,18,11,21,0,7],["GUSTAVO DE OLIVEIRA VIANA DOS SANTOS",0,0,4,44,188,18,11,30,0,7],["ALEX MACEDO ALVES",0,0,4,44,253,18,11,21,0,7],["JEAN PIERRE MARTINS",0,0,4,44,185,18,11,21,0,7],["MARYA GABRYELLE MUNIZ ALBUQUERQUE E LIMA",0,0,4,44,167,18,11,21,0,7],["HUGO DA SILVA SOUTO",0,0,4,22,172,4,5,17,0,6],["ESTER ALVES BORGES DE OLIVEIRA",0,0,4,33,0,13,15,10,0,8],["ITALLYNY SHELLY BARBOSA DE ARAUJO",1,0,4,0,299,15,5,14,0,10],["MAYARA THAIS SANTANA DO NASCIMENTO",0,0,4,53,283,28,5,36,0,10],["Amanda da Silva Lima",0,0,4,20,49,15,5,14,0,10],["IRIS DUTRA CANTINHO",0,0,4,20,238,15,5,14,0,10],["MARIA APARECIDA CANDIDO DAS NEVES",0,0,4,5,135,3,5,6,0,5],["IZABELA GONCALVES OLIVEIRA DA SILVA",1,0,4,18,39,15,5,14,0,10],["AMANDA ALVES FERREIRA",0,0,4,22,131,4,5,17,0,6],["ALINE FERNANDES DOS SANTOS",0,0,4,18,39,15,5,14,0,10],["INGRID LEONARDO DA SILVA",0,0,4,20,238,15,5,14,0,10],["ANA CRISTINA LIMA",0,0,4,19,203,16,5,15,0,5],["NATALIA SOUZA COELHO",0,0,4,8,79,5,5,8,0,7],["NATALIA SOUZA COELHO",1,0,4,8,79,5,5,8,0,7],["ANA PAULA VIEIRA POSSIDONIO",1,0,4,8,195,5,5,8,0,7],["JONATAS DUARTE DE OLIVEIRA SILVA",1,0,4,22,172,4,5,17,0,6],["REBECA ARAUJO DE SOUZA",0,0,4,6,10,3,5,6,0,5],["VANIA DE LOURDES PEREIRA DE LIMA NOBREGA",0,2,4,6,293,3,5,6,0,5],["KETHELLEN MAYARA BRITO DO NASCIMENTO",0,0,4,8,79,5,5,8,0,7],["KETHELLEN MAYARA BRITO DO NASCIMENTO",1,0,4,8,79,5,5,8,0,7],["STEFANY DE BARROS FERREIRA FREITAS",0,1,4,44,0,18,15,30,0,7],["STEFANY DE BARROS FERREIRA FREITAS",1,0,4,44,0,18,15,30,0,7],["BRUNA GABRIELA TRAJANO FERREIRA",0,0,4,8,169,5,5,8,0,7],["HEMILLY BEATRIZ SANTOS OLIVEIRA",0,0,4,44,185,18,5,21,0,7],["EMILY ESTEFANE DA SILVA LIMA",0,1,4,4,33,2,5,5,0,5],["JESSILAYNE EVELLYN LEITE DE SOUSA",1,0,4,3,5,2,5,5,0,5],["SAMUEL DOS SANTOS GOMES",1,0,4,59,300,32,11,41,0,8],["DANIEL MATHEUS VEIGA DO AMARAL",0,0,4,44,188,18,5,30,0,7],["IASMIN CAVALCANTI BRABO",1,0,4,3,62,2,5,5,0,5],["SCARLETT BRAZ DO NASCIMENTO",1,0,4,4,4,2,5,5,0,5],["BRUNA GABRIELA DE SOUZA",0,1,1,73,0,45,18,1,0,1],["KALINE DOS SANTOS ARAGAO",0,0,0,74,301,46,30,54,0,16],["KAMILA COMBERLANG DE QUEIROZ BARBOSA E SILVA",1,0,4,8,191,5,5,31,0,7],["NATHALIA RAQUEL ALVES DIONIZIO",0,0,4,19,203,16,5,15,0,5],["MILLENA PATRICIA DA SILVA SOARES",1,0,4,18,242,15,5,14,0,10],["THALITA TAVARES MENDES",0,0,4,44,253,18,5,21,0,7],["DANIEL DA SILVA SOBRINHO",0,1,4,20,239,15,5,14,0,10],["PEDRO HENRIQUE DO NASCIMENTO SEIXAS",0,0,4,19,48,16,5,15,0,5],["WALKILENE VIANA LIMA",0,0,4,53,283,28,5,36,0,10],["ERICK WESLEY BANDEIRA DOS SANTOS",0,0,4,6,30,3,5,6,0,5],["GABRIELLY SILVA DE OLIVEIRA",0,1,4,6,293,3,5,6,0,5],["GABRIELLY SILVA DE OLIVEIRA",1,1,4,6,293,3,5,6,0,5],["EWILYN MARIA SANTOS VIANA",0,0,5,75,0,37,22,11,0,9],["LUCIA HELENA ARAUJO SILVA",1,1,4,8,162,5,5,29,0,7],["VIRGINIA DA SILVA SILVERIO",0,1,0,0,35,12,7,13,0,0],["PAULA CRISTINA DE SOUZA",0,0,4,64,0,27,15,35,0,11],["MONIKE EVELLYN DE ARAUJO CAVALCANTI",0,1,4,26,302,0,5,55,0,7],["EMILY FELIX DA SILVA",0,0,4,20,234,15,5,14,0,10],["NATALY DA SILVA LIMA",0,0,4,47,256,6,5,33,0,6],["NATALY DA SILVA LIMA",1,1,4,47,256,6,5,33,0,6],["JOAO DAVI MENDES MONTEIRO",0,0,4,26,0,0,5,56,0,7],["ALEXSANDRO JUNIO ALVES DE SOUZA FERRAZ",0,1,4,44,216,18,5,38,0,7],["PEDRO FELIPE DOS SANTOS LEONEL",0,0,0,76,0,47,31,57,0,0],["IZABELA IZAIAS DA SILVA",0,0,4,44,185,18,5,21,0,7],["ANNA KAROLLINA VASCONCELOS ALMEIDA",0,1,0,77,303,48,32,0,0,0],["ANNA KAROLLINA VASCONCELOS ALMEIDA",1,0,0,77,303,48,32,0,0,0],["NATHANIELLY DA SILVA SANTOS",1,0,4,0,0,0,21,46,0,11],["INGRIDY KELLY BARROS ALMEIDA",0,0,5,78,0,49,22,11,0,9],["JACKSON DE ALMEIDA MACENA",0,1,4,26,65,0,5,26,0,7],["ISOLDA NOGUEIRA PATRICIO",0,1,4,47,252,6,5,33,0,6],["LINIA CASSIANE LINS DA SILVA",0,1,4,3,0,2,15,5,0,5],["LINIA CASSIANE LINS DA SILVA",1,0,4,3,0,2,15,5,0,5],["ISRAEL DO NASCIMENTO SILVA",0,1,1,79,0,50,33,1,0,1],["ISRAEL DO NASCIMENTO SILVA",1,1,1,79,0,50,33,1,0,1],["ALINE ALEXANDRE FREIRE",1,1,1,79,0,50,33,1,0,1],["NALBERT FERREIRA CASSIANO",0,0,4,5,9,3,5,6,0,5],["NALBERT FERREIRA CASSIANO",1,0,4,5,9,3,5,6,0,5],["MATHEUS ARAUJO FEITOSA",0,1,4,5,249,3,5,6,0,5],["VIVIANE DE OLIVEIRA ANDRADE",0,1,4,44,216,18,5,38,0,7],["LARISSA FERREIRA DE LIMA",1,0,4,7,66,4,5,7,0,6],["FERNANDA CAMILA DA SILVA ALBUQUERQUE",0,0,4,8,168,5,5,31,0,7],["LARYSSA GREENFER DOS SANTOS MARINHO",0,1,4,38,217,6,5,37,0,6],["LARYSSA GREENFER DOS SANTOS MARINHO",1,1,4,38,217,6,5,37,0,6],["LUCAS ARAUJO GOMES CESAR",1,0,4,47,218,6,5,33,0,6],["ALISSON DANIEL DIAS DOS SANTOS",1,0,4,47,247,6,5,33,0,6],["RAPHAELA QUEIROZ DE MELO BERNARDINO",0,0,4,6,31,3,5,6,0,5],["RAPHAELA QUEIROZ DE MELO BERNARDINO",1,0,4,6,31,3,5,6,0,5],["EMILLY THAISA MENEZES DOS SANTOS",0,1,4,4,0,2,15,5,0,5],["JOCELMA DA SILVA DINIZ",0,1,0,80,0,51,34,58,0,18],["LUCAS FERNANDES DE OLIVEIRA PINHO",0,0,4,5,304,3,5,6,0,5],["KAYNAN RICARDO DE SOUZA BRAGA",0,0,4,5,135,3,5,6,0,5],["MAYARA BEZERRA DE FREITAS",1,0,4,45,171,24,5,32,0,7],["AMANDA DA SILVA COSTA",1,0,4,44,216,18,5,38,0,7],["JOAO LUCAS DE LIMA PEREIRA",1,0,4,4,0,2,15,5,0,5],["EDUARDA VALENTIM",0,0,4,22,131,4,5,17,0,6],["AMANDA GABRIELA DA SILVA CARVALHO",0,1,4,22,133,4,5,17,0,6],["AMANDA GABRIELA DA SILVA CARVALHO",1,0,4,22,133,4,5,17,0,6],["SAMUEL DE ARAUJO CARNEIRO",1,0,4,44,216,18,5,38,0,7],["NATHALIA MARIA DOS SANTOS SILVA",1,0,4,22,132,4,5,17,0,6],["BEATRIZ MELISSA COSTA GADELHA",1,0,4,47,252,6,5,42,0,6],["EMERSON ELIAS MACENA DE ARAUJO",0,0,5,81,0,0,22,11,0,9],["EMERSON ELIAS MACENA DE ARAUJO",1,0,5,81,0,0,22,11,0,9],["MARIA SARAH SANTOS SILVA SOARES",0,1,4,22,131,4,5,17,0,6],["NAELSON DA SILVA VIDERES",0,0,4,7,305,4,5,22,0,6],["JOANDERSON DOS SANTOS SILVA",0,1,4,22,131,4,5,17,0,6],["JOSINEIDE DO NASCIMENTO SILVA",0,1,4,22,133,4,5,17,0,6],["KELLY CRISTINA FERREIRA DA SILVA",0,0,4,7,66,4,5,7,0,6],["LISSIANNE LIVIA MARQUES MACIEL",0,1,4,6,30,3,5,6,0,5],["MANUEL VITOR DA SILVA LIMA",0,0,1,0,306,52,35,4,0,4],["ALISON NOBREGA DOS SANTOS",0,0,4,3,88,2,5,59,0,5],["TATIANA DE LIMA BEZERRA",1,0,4,3,0,2,15,5,0,5],["JOAO GALDINO RIBEIRO NETO",1,1,1,79,0,50,33,1,0,1],["ALINE CRISTINA PEREIRA RIBEIRO",0,1,4,6,31,3,5,6,0,5],["ALINE CRISTINA PEREIRA RIBEIRO",1,0,4,6,31,3,5,6,0,5],["AMANDA ISMENIA SILVA MEDEIROS",0,1,4,44,216,18,5,38,0,7],["RAFAEL DOS SANTOS SILVA",0,0,4,0,299,15,5,14,0,10],["YOHANNE LUIZA ARAUJO",1,0,4,45,171,24,5,32,0,7],["FERNANDA MORAIS SILVA DOS PASSOS",1,0,4,47,247,6,5,33,0,6],["KEVIN LUCAS DA SILVA LIMA",0,1,0,82,307,53,14,0,0,0],["DIANA PAULA SOUZA DE ALMEIDA",0,1,0,0,35,12,7,13,0,0],["LUANA BARRETO DE MACEDO",0,0,4,24,0,17,15,18,0,6],["LUCIANA LORRANY JUSTINO MOREIRA",1,0,0,0,290,39,24,48,0,0],["ANDELINE JUSTINO DA SILVA",0,1,4,47,256,6,5,33,0,6],["ANDELINE JUSTINO DA SILVA",1,1,4,47,256,6,5,33,0,6],["GEREMIAS ALVES DA SILVA JUNIOR",1,0,4,47,256,6,5,33,0,6],["VICTORIA CAMELO DE CARVALHO",0,1,4,5,249,3,5,6,0,5],["ANDERSON ANTONY PEREIRA LACERDA",0,0,4,5,282,3,5,6,0,5],["ANDERSON ANTONY PEREIRA LACERDA",1,0,4,5,282,3,5,6,0,5],["DANIEL GOMES VIDAL DE NEGREIROS",0,0,4,5,135,3,5,6,0,5],["CARLA ALEXSANDRA FELIX DE OLIVEIRA",0,0,8,0,0,54,36,60,0,19],["ANAYZA DIAS LEITE",1,0,4,4,4,2,5,5,0,5],["ANA HELENA DINIZ DA SILVA",0,0,4,6,10,3,5,6,0,5],["CLARINDA TAVARES DE SOUZA",0,0,4,29,94,18,5,21,0,7],["JESSICA NASCIMENTO DA SILVA",1,1,1,79,0,50,33,1,0,1],["JOEDSON ARANHA GONCALVES",0,0,5,83,0,55,22,11,0,9],["MARIA DAS GRACAS TOMAS BRAGA",0,1,4,26,64,0,5,61,0,7],["JOSIELLY BEZERRA CARDOSO VIEIRA",0,0,4,44,167,18,5,21,0,7],["ADRIELY NASCIMENTO ANDRADE",0,0,0,51,206,26,14,0,0,0],["ADRIELY NASCIMENTO ANDRADE",1,0,0,51,206,26,14,0,0,0],["HENRIQUE SANTANA",0,1,4,44,308,18,5,61,0,7],["ANDRE MARINHO BARBOSA",0,1,1,84,0,56,4,4,0,4],["CLAUDIA REZENDE TELES",0,1,4,6,293,3,5,6,0,5],["Maria Clara Alves de Oliveira",0,1,4,38,217,6,5,37,0,6],["ERIKA FREIRE LEITE PESSOA",0,0,4,44,253,18,5,21,0,7],["ERIKA FREIRE LEITE PESSOA",1,0,4,44,253,18,5,21,0,7],["LENISA GOMES DOS SANTOS MIRANDA",1,0,4,5,8,3,5,6,0,5],["NATHAN MURILO SANTANA ROQUE",0,0,4,5,282,3,5,6,0,5],["MILKA ADRIANA DOS SANTOS BENTO",0,0,4,44,185,18,5,21,0,7],["LARYSSA RODRIGUES DOS RAMOS",0,0,4,8,195,5,5,8,0,7],["KLICIA THALITA SEREJO OLIVEIRA",0,1,4,7,12,4,5,7,0,6],["FERNANDA THALITA DOS SANTOS",0,1,4,6,30,3,5,6,0,5],["MICAEL FELIPH REIS DA SILVA",0,1,4,5,309,3,5,6,0,5],["NATALIA HENRIQUE FERREIRA SANTOS",0,1,4,6,293,3,5,6,0,5],["RICARDO VANDERLEY NUNES MACHADO JUNIOR",0,0,4,6,293,3,5,6,0,5],["EMILLY APARECIDA ARAUJO DA SILVA",1,0,4,36,0,11,15,10,0,8],["ANDRE LUIS HENRIQUE ELIAS MONTEIRO",0,0,4,44,193,18,5,30,0,7],["ERIKA CAMILLA ALBUQUERQUE DA SILVA",0,0,4,29,94,18,5,21,0,7],["RAYSSA CORREIA FERRAZ",0,0,4,20,49,15,5,14,0,10],["THAIS SANDY SANTOS DA SILVA",0,0,4,26,64,0,5,61,0,7],["STEFANY EMANUELLE DA COSTA BARROS",0,0,1,85,0,57,18,1,0,1],["ADNAYANE LOPES DE ARAUJO FERREIRA",0,1,4,22,131,4,5,17,0,6],["ADNAYANE LOPES DE ARAUJO FERREIRA",1,0,4,22,131,4,5,17,0,6],["HELLEN MAYNNE LUCAS XAVIER",0,0,4,63,0,34,23,44,0,5],["ANA EDUARDA BEZERRA OLIVEIRA",1,0,4,20,238,15,5,14,0,10],["ARYELLE CAREN NEVES FERREIRA",0,0,4,5,135,3,5,6,0,5],["JOSE LUIZ DA SILVA NETO",0,1,0,86,0,41,16,52,0,0],["JESSICA MENDES DE LIMA",0,1,4,44,193,18,5,30,0,7],["GLAUCIO MARTINIANO ASSUNCAO",0,1,4,5,249,3,5,6,0,5],["FABIANO RAMOS LOPES FILHO",0,0,9,87,0,0,37,62,0,3],["MARIA VITORIA OLIVEIRA DE LIRA",0,0,4,6,264,3,5,6,0,5],["DEBORA KALINE NEVES DA SILVA",0,0,4,6,31,3,5,6,0,5],["KARLA GABRIELLE ALEXANDRE DE SOUZA",1,0,0,0,290,39,27,48,0,0],["VANESSA MARIA JOAQUIM",0,0,4,4,210,2,5,5,0,5],["GABRIEL DE ALBUQUERQUE VENANCIO",0,1,4,6,293,3,5,6,0,5],["EDUARDO MATHEUS ALENCAR DE SOUSA",0,1,0,86,0,41,38,52,0,0],["FABIANI DE SOUZA SILVA",1,1,4,47,252,6,5,33,0,6],["JOHAN ALISON RAMOS DE ALCANTARA PESSOA",0,1,4,56,235,29,5,39,0,14],["JESSICA KARLA MEIRELES GONCALVES",0,1,4,6,30,3,5,6,0,5],["JOYCE RIBEIRO DA SILVA",0,0,4,18,0,15,5,14,0,10],["DERLLANE KARIA DA COSTA SOUZA",0,0,0,0,0,41,26,52,0,0],["MARCOS ELIAS FURTADO DE SOUZA",0,0,4,5,11,3,5,6,0,5],["BRENDO DIEGO DEUSDEDIT SANTOS",1,1,4,18,242,15,5,14,0,10],["JOSENILDA DA SILVA SANTOS",1,0,4,44,253,18,5,21,0,7],["MARIA DENIZE SOUZA TRAVASSOS DE FIGUEIREDO",0,1,4,22,131,4,5,17,0,6],["Ana Cristina dos Santos",0,0,4,56,237,29,5,39,0,14],["LUCELIA RENATA DA SILVA",0,0,4,44,253,18,5,21,0,7],["RAMON VICTOR DA SILVA RAMOS",0,0,8,88,0,54,39,63,0,19],["THAMIRES CAMPOS SILVA DOS SANTOS",0,0,4,53,283,28,5,36,0,10],["MAGEDIEL DA SILVA ARAUJO",1,1,4,0,289,15,5,14,0,10],["JOSIANE DE LIMA OLIVEIRA BENTO",0,0,4,20,240,15,5,14,0,10],["ANA KARLA DA SILVA BAPTISTA",0,1,4,20,239,15,5,14,0,10],["TATIANA APARECIDA SALVIANO DA SILVA",0,1,4,0,289,15,5,14,0,10],["ANA PAULA CRISTINA DE QUEIROZ",0,0,4,6,264,3,5,6,0,5],["JUSSIARA BATISTA DA SILVA",0,0,4,56,236,29,5,39,0,14],["JUSSIARA BATISTA DA SILVA",1,0,4,56,236,29,5,39,0,14],["JEANE SILVA DOS SANTOS ROCHA",0,1,1,79,0,50,33,1,0,1],["ESTER RODRIGUES DE SOUZA SANTOS",0,1,4,3,63,2,5,5,0,5],["VERUSKA TAYNAN MELO DOS SANTOS",0,1,4,6,293,3,5,6,0,5],["VERUSKA TAYNAN MELO DOS SANTOS",1,1,4,6,293,3,5,6,0,5],["RAYANNE MENDONCA RODRIGUES",1,0,4,3,3,2,5,5,0,5],["JUCIARA SILVA DE ARRUDA",0,0,4,0,299,15,5,14,0,10]]};
+
+let F = RAW.fields;
+let IDX = {};
+F.forEach((f,i)=>IDX[f]=i);
+let DICTS = RAW.dicts;
+let ROWS = RAW.rows;
+
+function decode(row, field){
+  if(field === 'aluno') return row[IDX['aluno']];
+  return DICTS[field][row[IDX[field]]];
+}
+
+function uniqueSorted(field){
+  const s = new Set();
+  ROWS.forEach(r=>s.add(decode(r,field)));
+  return Array.from(s).filter(v=>v && v.trim()!=='').sort((a,b)=>a.localeCompare(b,'pt-BR'));
+}
+
+const FILTER_DEFS = [
+  {key:'diretoria', label:'Diretoria'},
+  {key:'gerente', label:'Gerente'},
+  {key:'supervisor', label:'Supervisor'},
+  {key:'curso', label:'Curso'},
+  {key:'status', label:'Status'},
+  {key:'cidade', label:'Cidade'},
+];
+
+const state = {filters:{}, search:'', page:1, pageSize:12};
+FILTER_DEFS.forEach(fd=>state.filters[fd.key]='');
+
+function buildFilters(){
+  const box = document.getElementById('filters');
+  box.innerHTML = '';
+  FILTER_DEFS.forEach(fd=>{
+    const opts = uniqueSorted(fd.key);
+    const wrap = document.createElement('div');
+    wrap.className = 'filter-field';
+    const label = document.createElement('label');
+    label.textContent = fd.label;
+    const select = document.createElement('select');
+    select.id = 'filter-'+fd.key;
+    const optAll = document.createElement('option');
+    optAll.value=''; optAll.textContent='Todos';
+    select.appendChild(optAll);
+    opts.forEach(o=>{
+      const op = document.createElement('option');
+      op.value=o; op.textContent=o;
+      select.appendChild(op);
+    });
+    select.addEventListener('change', ()=>{
+      state.filters[fd.key] = select.value;
+      state.page = 1;
+      render();
+    });
+    wrap.appendChild(label); wrap.appendChild(select);
+    box.appendChild(wrap);
+  });
+}
+
+function getFilteredRows(){
+  const s = state.search.trim().toLowerCase();
+  return ROWS.filter(r=>{
+    for(const fd of FILTER_DEFS){
+      const val = state.filters[fd.key];
+      if(val && decode(r, fd.key) !== val) return false;
+    }
+    if(s){
+      const hay = (decode(r,'aluno')+' '+decode(r,'gerente')+' '+decode(r,'supervisor')+' '+decode(r,'curso')).toLowerCase();
+      if(!hay.includes(s)) return false;
+    }
+    return true;
+  });
+}
+
+function statusClass(st){
+  if(st === 'CONCLUÍDO') return 'ok';
+  if(st === 'PARCIALMENTE CONCLUÍDO') return 'mid';
+  return 'bad';
+}
+
+function renderDonut(done, partial, notdone){
+  const svg = document.getElementById('statusDonut');
+  const total = done + partial + notdone;
+  const r = 50, cx = 60, cy = 60, sw = 16;
+  const C = 2 * Math.PI * r;
+  const segs = [
+    {val: done, color: '#1e9e5a'},
+    {val: partial, color: '#e0a300'},
+    {val: notdone, color: '#d94848'},
+  ];
+  let cum = 0;
+  let circles = '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="#eef1f6" stroke-width="'+sw+'"></circle>';
+  if(total > 0){
+    segs.forEach(seg=>{
+      if(seg.val <= 0) return;
+      const frac = seg.val / total;
+      const dash = frac * C;
+      const gap = C - dash;
+      const offset = -cum * C;
+      circles += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+seg.color+'" stroke-width="'+sw+'" stroke-dasharray="'+dash+' '+gap+'" stroke-dashoffset="'+offset+'" transform="rotate(-90 '+cx+' '+cy+')"></circle>';
+      cum += frac;
+    });
+  }
+  svg.innerHTML = circles;
+}
+
+function render(){
+  const rows = getFilteredRows();
+  const total = rows.length;
+  let done=0, partial=0, notdone=0;
+  rows.forEach(r=>{
+    const st = decode(r,'status');
+    if(st==='CONCLUÍDO') done++;
+    else if(st==='PARCIALMENTE CONCLUÍDO') partial++;
+    else notdone++;
+  });
+  const pending = partial + notdone;
+  const donePct = total? (done/total*100):0;
+  const pendPct = total? (pending/total*100):0;
+
+  document.getElementById('hStat1').textContent = 'Cursos p/ Treinamento';
+  document.getElementById('hStat2').textContent = total.toLocaleString('pt-BR');
+
+  document.getElementById('kpiTotal').textContent = total.toLocaleString('pt-BR');
+  document.getElementById('kpiDone').textContent = done.toLocaleString('pt-BR');
+  document.getElementById('kpiDonePct').textContent = donePct.toFixed(1)+'%';
+  document.getElementById('kpiDoneBar').style.width = donePct+'%';
+  document.getElementById('kpiPending').textContent = pending.toLocaleString('pt-BR');
+  document.getElementById('kpiPendingPct').textContent = pendPct.toFixed(1)+'%';
+  document.getElementById('kpiPendingBar').style.width = pendPct+'%';
+  document.getElementById('kpiRate').textContent = donePct.toFixed(1)+'%';
+
+  // Donut
+  document.getElementById('donutTotal').textContent = total.toLocaleString('pt-BR');
+  renderDonut(done, partial, notdone);
+  const legendBox = document.getElementById('statusLegend');
+  const legendItems = [
+    ['Concluído','#1e9e5a',done],
+    ['Parcialmente concluído','#e0a300',partial],
+    ['Não realizado','#d94848',notdone],
+  ];
+  legendBox.innerHTML = legendItems.map(([name,color,cnt])=>{
+    const pct = total? (cnt/total*100).toFixed(1):'0.0';
+    return '<div class="item"><span class="sw" style="background:'+color+'"></span><span class="txt">'+name+'</span><span class="cnt">'+cnt.toLocaleString('pt-BR')+'</span><span class="pctv">'+pct+'%</span></div>';
+  }).join('');
+
+  // Pendencias por Gerente (top10, excluindo "Sem Gerente")
+  const gerenteMap = {};
+  rows.forEach(r=>{
+    const g = decode(r,'gerente');
+    const st = decode(r,'status');
+    if(g === 'Sem Gerente' || !g) return;
+    if(!gerenteMap[g]) gerenteMap[g] = {pend:0,total:0};
+    gerenteMap[g].total++;
+    if(st !== 'CONCLUÍDO') gerenteMap[g].pend++;
+  });
+  const gerenteArr = Object.entries(gerenteMap)
+    .filter(([,v])=>v.pend>0)
+    .sort((a,b)=>b[1].pend-a[1].pend)
+    .slice(0,10);
+  const maxGerentePend = gerenteArr.length? gerenteArr[0][1].pend : 1;
+  const gerenteBox = document.getElementById('gerenteBar');
+  gerenteBox.innerHTML = gerenteArr.length ? gerenteArr.map(([name,v])=>{
+    const w = (v.pend/maxGerentePend*100).toFixed(1);
+    return '<div class="row"><div class="name" title="'+name+'">'+name+'</div><div class="track"><div class="fill" style="width:'+w+'%;background:var(--red)"></div></div><div class="num">'+v.pend+'</div></div>';
+  }).join('') : '<div class="empty-note">Nenhuma pendência para os filtros atuais.</div>';
+
+  // Top 5 criticos (por % pendencia, min 1 registro)
+  const top5 = Object.entries(gerenteMap)
+    .filter(([,v])=>v.pend>0)
+    .map(([name,v])=>({name,pend:v.pend,pct: v.total? v.pend/v.total*100:0}))
+    .sort((a,b)=> b.pend - a.pend)
+    .slice(0,5);
+  const top5Body = document.getElementById('top5Body');
+  top5Body.innerHTML = top5.length ? top5.map((g,i)=>{
+    const rankClass = i===0?'':'r'+Math.min(i+1,5);
+    return '<tr><td><span class="rank '+rankClass+'">'+(i+1)+'</span></td><td>'+g.name+'</td><td>'+g.pend+'</td><td class="pctbad">'+g.pct.toFixed(1)+'%</td></tr>';
+  }).join('') : '<tr><td colspan="4" class="empty-note">Sem dados para os filtros atuais.</td></tr>';
+
+  // Cursos por status (stacked)
+  const cursoMap = {};
+  rows.forEach(r=>{
+    const c = decode(r,'curso');
+    const st = decode(r,'status');
+    if(!cursoMap[c]) cursoMap[c] = {done:0,partial:0,notdone:0,total:0};
+    cursoMap[c].total++;
+    if(st==='CONCLUÍDO') cursoMap[c].done++;
+    else if(st==='PARCIALMENTE CONCLUÍDO') cursoMap[c].partial++;
+    else cursoMap[c].notdone++;
+  });
+  const cursoBox = document.getElementById('cursoBlocks');
+  const cursoEntries = Object.entries(cursoMap).sort((a,b)=>b[1].total-a[1].total);
+  cursoBox.innerHTML = cursoEntries.length ? cursoEntries.map(([name,v])=>{
+    const pD = v.total? v.done/v.total*100:0;
+    const pP = v.total? v.partial/v.total*100:0;
+    const pN = v.total? v.notdone/v.total*100:0;
+    return '<div class="curso-block">'+
+      '<div class="top"><span class="cname">'+name+'</span><span class="ctotal">'+v.total.toLocaleString('pt-BR')+'</span></div>'+
+      '<div class="stack">'+
+        '<div style="width:'+pD+'%;background:var(--green)"></div>'+
+        '<div style="width:'+pP+'%;background:var(--amber)"></div>'+
+        '<div style="width:'+pN+'%;background:var(--red)"></div>'+
+      '</div>'+
+      '<div class="breakdown">'+v.done.toLocaleString('pt-BR')+' concluídos &nbsp;|&nbsp; '+v.partial.toLocaleString('pt-BR')+' parciais &nbsp;|&nbsp; '+v.notdone.toLocaleString('pt-BR')+' não realizados</div>'+
+    '</div>';
+  }).join('') : '<div class="empty-note">Sem dados para os filtros atuais.</div>';
+
+  // Pendencias por Diretoria
+  const diretoriaMap = {};
+  rows.forEach(r=>{
+    const d = decode(r,'diretoria');
+    const st = decode(r,'status');
+    if(!d) return;
+    if(!diretoriaMap[d]) diretoriaMap[d] = {pend:0,total:0};
+    diretoriaMap[d].total++;
+    if(st !== 'CONCLUÍDO') diretoriaMap[d].pend++;
+  });
+  const diretoriaArr = Object.entries(diretoriaMap)
+    .filter(([,v])=>v.pend>0)
+    .sort((a,b)=>b[1].pend-a[1].pend)
+    .slice(0,10);
+  const maxDiretoriaPend = diretoriaArr.length? diretoriaArr[0][1].pend : 1;
+  const diretoriaBox = document.getElementById('diretoriaBar');
+  diretoriaBox.innerHTML = diretoriaArr.length ? diretoriaArr.map(([name,v])=>{
+    const w = (v.pend/maxDiretoriaPend*100).toFixed(1);
+    return '<div class="row"><div class="name" title="'+name+'">'+name+'</div><div class="track"><div class="fill" style="width:'+w+'%;background:#7c5cff"></div></div><div class="num">'+v.pend+'</div></div>';
+  }).join('') : '<div class="empty-note">Nenhuma pendência para os filtros atuais.</div>';
+
+  // Detail table + pagination
+  const pageSize = state.pageSize;
+  const pageCount = Math.max(1, Math.ceil(total/pageSize));
+  if(state.page > pageCount) state.page = pageCount;
+  const startIdx = (state.page-1)*pageSize;
+  const pageRows = rows.slice(startIdx, startIdx+pageSize);
+  const detailBody = document.getElementById('detailBody');
+  detailBody.innerHTML = pageRows.length ? pageRows.map(r=>{
+    const st = decode(r,'status');
+    return '<tr>'+
+      '<td>'+decode(r,'aluno')+'</td>'+
+      '<td>'+decode(r,'diretoria')+'</td>'+
+      '<td>'+decode(r,'gerente')+'</td>'+
+      '<td>'+decode(r,'supervisor')+'</td>'+
+      '<td>'+decode(r,'curso')+'</td>'+
+      '<td><span class="badge '+statusClass(st)+'">'+st+'</span></td>'+
+      '<td>'+decode(r,'cargo')+'</td>'+
+      '<td>'+decode(r,'cidade')+'</td>'+
+      '<td>'+decode(r,'operacao')+'</td>'+
+    '</tr>';
+  }).join('') : '<tr><td colspan="9" class="empty-note">Nenhum registro encontrado.</td></tr>';
+
+  document.getElementById('pagerInfo').textContent =
+    total===0 ? 'Nenhum registro' :
+    'Mostrando '+(startIdx+1)+'–'+Math.min(startIdx+pageSize,total)+' de '+total.toLocaleString('pt-BR')+' registros';
+  document.getElementById('prevBtn').disabled = state.page<=1;
+  document.getElementById('nextBtn').disabled = state.page>=pageCount;
+
+  window.__currentFilteredRows = rows;
+}
+
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  state.search = e.target.value;
+  state.page = 1;
+  render();
+});
+document.getElementById('prevBtn').addEventListener('click', ()=>{
+  if(state.page>1){state.page--; render();}
+});
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  state.page++; render();
+});
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  if(typeof XLSX === 'undefined'){
+    alert('A exportação XLSX precisa que o navegador esteja conectado à internet. O dashboard e os dados continuam funcionando normalmente.');
+    return;
+  }
+  const rows = window.__currentFilteredRows || [];
+  const data = [
+    ['Colaborador','Diretoria','Gerente','Supervisor','Curso','Status','Cargo','Cidade','Operação'],
+    ...rows.map(r => [
+      decode(r,'aluno'),
+      decode(r,'diretoria'),
+      decode(r,'gerente'),
+      decode(r,'supervisor'),
+      decode(r,'curso'),
+      decode(r,'status'),
+      decode(r,'cargo'),
+      decode(r,'cidade'),
+      decode(r,'operacao')
+    ])
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!autofilter'] = { ref: ws['!ref'] };
+  ws['!cols'] = [
+    {wch:28},{wch:20},{wch:22},{wch:22},{wch:32},{wch:22},{wch:22},{wch:18},{wch:22}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Detalhamento');
+  XLSX.writeFile(wb, 'detalhamento_cursos.xlsx');
+});
+
+
+/* =========================================================
+   IMPORTAÇÃO DINÂMICA DA BASE EXCEL
+   ========================================================= */
+function normalizeHeader(value){
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,'')
+    .trim();
+}
+
+function cellText(value){
+  if(value === null || value === undefined) return '';
+  return String(value).trim();
+}
+
+function findColumn(headers, aliases){
+  const normalized = headers.map(h => normalizeHeader(h));
+  for(const alias of aliases){
+    const i = normalized.indexOf(normalizeHeader(alias));
+    if(i >= 0) return headers[i];
+  }
+  return null;
+}
+
+function buildDynamicData(rows){
+  if(!rows || !rows.length) throw new Error('A planilha não possui registros.');
+
+  const headers = Object.keys(rows[0]);
+  const col = {
+    aluno: findColumn(headers, ['Aluno','Nome']),
+    curso: findColumn(headers, ['Curso']),
+    status: findColumn(headers, ['Status Conclusao','Status Conclusão','Status']),
+    diretoria: findColumn(headers, ['Diretoria']),
+    coordenador: findColumn(headers, ['Coordenador','Coordenador(a)']),
+    supervisor: findColumn(headers, ['Supervisor','Supervisor(a)']),
+    gerente: findColumn(headers, ['Gerente produto','Gerente Produto','Gerente']),
+    cargo: findColumn(headers, ['Cargo','Função','Funcao']),
+    operacao: findColumn(headers, ['Operaçao','Operação','Operacao']),
+    cidade: findColumn(headers, ['Cidade','Site']),
+    diretor: findColumn(headers, ['Diretor','Executivo'])
+  };
+
+  const missing = ['aluno','curso','status','diretoria'].filter(k => !col[k]);
+  if(missing.length){
+    throw new Error('Não encontrei as colunas obrigatórias: ' + missing.join(', '));
+  }
+
+  const fields = ['aluno','curso','status','diretoria','coordenador','supervisor','gerente','cargo','operacao','cidade','diretor'];
+  const dicts = {};
+  const dictIndex = {};
+  fields.forEach(f => {
+    dicts[f] = [];
+    dictIndex[f] = new Map();
+  });
+
+  function encode(field, value){
+    const v = cellText(value);
+    if(!dictIndex[field].has(v)){
+      dictIndex[field].set(v, dicts[field].length);
+      dicts[field].push(v);
+    }
+    return dictIndex[field].get(v);
+  }
+
+  const encodedRows = rows
+    .filter(r => cellText(r[col.aluno]) || cellText(r[col.curso]))
+    .map(r => fields.map(f => encode(f, col[f] ? r[col[f]] : '')));
+
+  return {fields, dicts, rows: encodedRows};
+}
+
+function resetStateAfterImport(){
+  state.search = '';
+  state.page = 1;
+  FILTER_DEFS.forEach(fd => state.filters[fd.key] = '');
+}
+
+function showUploadMessage(message, ok){
+  const box = document.getElementById('uploadBanner');
+  box.textContent = message;
+  box.style.display = 'block';
+  box.style.background = ok ? 'var(--green-bg)' : 'var(--red-bg)';
+  box.style.color = ok ? 'var(--green)' : 'var(--red)';
+  box.style.border = '1px solid ' + (ok ? '#b9e8ce' : '#f2c3c3');
+}
+
+async function importExcelFile(file){
+  if(!file) return;
+
+  try{
+    showUploadMessage('Lendo "' + file.name + '"…', true);
+
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, {type:'array'});
+
+    const preferredNames = [
+      'BASE ANALITICA__2 (2)',
+      'BASE ANALITICA__2',
+      'BASE ANALÍTICA__2 (2)',
+      'BASE ANALÍTICA__2'
+    ];
+
+    let sheetName = preferredNames.find(n => workbook.SheetNames.includes(n));
+
+    if(!sheetName){
+      for(const name of workbook.SheetNames){
+        const ws = workbook.Sheets[name];
+        const preview = XLSX.utils.sheet_to_json(ws, {
+          header: 1, defval: '', blankrows: false, range: 0
+        });
+        const headerRow = preview.find(r =>
+          Array.isArray(r) &&
+          r.some(v => normalizeHeader(v) === 'aluno') &&
+          r.some(v => normalizeHeader(v) === 'curso')
+        );
+        if(headerRow){
+          sheetName = name;
+          break;
+        }
+      }
+    }
+
+    if(!sheetName){
+      throw new Error('Não encontrei uma aba de base com as colunas Aluno e Curso.');
+    }
+
+    const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet, {
+      defval: '',
+      raw: false,
+      blankrows: false
+    });
+
+    const dynamic = buildDynamicData(rows);
+
+    RAW = dynamic;
+    F = RAW.fields;
+    IDX = {};
+    F.forEach((f,i)=>IDX[f]=i);
+    DICTS = RAW.dicts;
+    ROWS = RAW.rows;
+
+    resetStateAfterImport();
+    buildFilters();
+    render();
+
+    document.getElementById('hStat3').textContent =
+      new Date().toLocaleString('pt-BR');
+
+    showUploadMessage(
+      'Base atualizada com sucesso: ' +
+      ROWS.length.toLocaleString('pt-BR') +
+      ' registros da aba "' + sheetName + '".',
+      true
+    );
+  }catch(err){
+    console.error(err);
+    showUploadMessage(
+      'Não foi possível carregar a planilha: ' + err.message,
+      false
+    );
+  }
+}
+
+document.getElementById('fileInput').addEventListener('change', function(e){
+  const file = e.target.files && e.target.files[0];
+  importExcelFile(file);
+  e.target.value = '';
+});
+
+buildFilters();
+render();
+</script>
+</body>
+</html>
